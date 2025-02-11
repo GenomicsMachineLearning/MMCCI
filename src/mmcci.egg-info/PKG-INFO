@@ -15,7 +15,7 @@ Description-Content-Type: text/markdown
 License-File: LICENSE.txt
 Requires-Dist: numpy<2.0.0,>=1.24.0
 Requires-Dist: pandas>=2.1.4
-Requires-Dist: networkx>=3.2.1
+Requires-Dist: networkx>=3.3.0
 Requires-Dist: matplotlib<4.0.0,>=3.8.2
 Requires-Dist: scikit-learn>=1.3.0
 Requires-Dist: scipy>=1.9.1

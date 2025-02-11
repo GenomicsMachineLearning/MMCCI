@@ -3,6 +3,7 @@ from . import plotting as plt
 from . import scoring as sc
 from . import tools as tl
 from . import analysis as an
+from . import io
 from .CCIData_class import CCIData
 
 __version__ = "0.1.0"

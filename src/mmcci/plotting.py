@@ -2,6 +2,8 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 import networkx as nx
 import numpy as np
+import pandas as pd
+import matplotlib.gridspec as gridspec
 
 from . import plot_helper
 from . import analysis as an
@@ -13,7 +15,7 @@ def network_plot(
     diff_plot=False,
     normalise=True,
     remove_unconnected=True,
-    show_labels=True,
+    show_labels=False,
     p_val_cutoff=0.05,
     edge_weight=20,
     text_size=15,
@@ -23,9 +25,11 @@ def network_plot(
     node_label_dist=1,
     p_val_text_size=10,
     node_colors=None,
-    node_palette=None,
+    node_palette="tab20",
     outer_node_palette=None,
     show=True,
+    show_legend=True,
+    legend_size=12,
 ):
     """Plots a network with optional edge significance highlighting and node
     coloring based on in-degree and out-degree difference.
@@ -58,21 +62,27 @@ def network_plot(
         node_colors (dict, optional): A dictionary of colors for each node. Overwrites
         node_palette. Defaults to None.
         node_palette (str, optional): The name of the color palette to use for nodes.
-        Defaults to None.
+        Defaults to "tab20".
         outer_node_palette (str, optional): The name of the color palette to use for
         outer nodes to show sender/reciever nodes. Defaults to None.
         show (bool, optional): Whether to show the plot or not. Defaults to True.
+        show_legend (bool, optional): Whether to show legend. Defaults to False.
+        legend_size (int, optional): Font size for legend. Defaults to 12.
 
     Returns:
         tuple: A tuple containing the figure and axis objects.
     """
 
-    if isinstance(network, dict):
-        raise ValueError(
-            "Input should be a single matrix, not a sample. You may need to run \
-                calculate_overall_interactions() first or select an LR pair.")
+    if not isinstance(network, pd.DataFrame):
+        raise ValueError("Input should be a dataframe.")
 
+    # Adjust the figure layout to accommodate the legend on the right
     fig = plt.figure(figsize=figsize)
+    gs = gridspec.GridSpec(1, 2, width_ratios=[5, 1], wspace=0.2)  # Adjust width_ratios as needed
+
+    # Main plot area
+    ax = fig.add_subplot(gs[0])
+    plt.sca(ax)  # Set the current axis to the main plot area
 
     if remove_unconnected:
         network = network.loc[(network != 0).any(axis=1), (network != 0).any(axis=0)]
@@ -119,12 +129,13 @@ def network_plot(
         ]
 
     if node_colors is not None:
-        node_colors = [node_colors[node] for node in G_network.nodes]
+        node_colors_list = [node_colors[node] for node in G_network.nodes]
     else:
         if node_palette is not None:
-            node_colors = list(plt.get_cmap(node_palette).colors)[:len(G_network.nodes)]
+            node_colors_list = \
+                list(plt.get_cmap(node_palette).colors)[:len(G_network.nodes)]
         else:
-            node_colors = ["grey" for node in G_network.nodes]
+            node_colors_list = ["grey" for node in G_network.nodes]
 
     if p_vals is None or diff_plot == False:
         # Create a non-significant matrix
@@ -199,7 +210,7 @@ def network_plot(
         G_network,
         pos,
         node_size=node_size,
-        node_color=node_colors,
+        node_color=node_colors_list,
         edgecolors=edge_colors,
         linewidths=8.0,
     )
@@ -294,7 +305,7 @@ def network_plot(
         else:
             edge_labels[key] = round(value, 3)
 
-    def offset(d, pos, dist=0.05, loop_shift=0.22):
+    def offset(d, pos, dist=0.05, loop_shift=0.1):
         for (u, v), obj in d.items():
             if u != v:
                 par = dist * (pos[v] - pos[u])
@@ -306,7 +317,12 @@ def network_plot(
                 obj.set_position((x, y + loop_shift))
 
     d = nx.draw_networkx_edge_labels(
-        G_network, pos, edge_labels, font_size=p_val_text_size)
+        G_network, 
+        pos, 
+        edge_labels, 
+        font_size=p_val_text_size, 
+        connectionstyle="arc3,rad=0.08"
+        )
 
     offset(d, pos)
 
@@ -329,8 +345,42 @@ def network_plot(
     ax = plt.gca()
     ax.margins(0.08)
     plt.axis("off")
-    plt.tight_layout()
+    
+    if show_legend:
+        # Create a color bar in the bottom-right corner
+        color_bar_ax = fig.add_axes([0.75, 0.2, 0.05, 0.2])  # [left, bottom, width, height]
+        if sum(abs(value) for value in in_out_diff.values()) != 0:
+            sm = plt.cm.ScalarMappable(cmap=outer_node_cmap,
+                                    norm=plt.Normalize(vmin=-max_diff, vmax=max_diff))
+            sm.set_array([])
+            cbar = plt.colorbar(sm, cax=color_bar_ax)
+            cbar.set_ticks([])  # Remove the ticks
+            cbar.set_label('Net sender ← → Net receiver', fontsize=legend_size)
 
+        # Add the legend in the top-right corner
+        legend_elements = []
+        if diff_plot:
+            legend_elements.extend([
+                plt.Line2D([0], [0], color='pink', lw=2, label='Non-significant positive'),
+                plt.Line2D([0], [0], color='lightgreen', lw=2, label='Non-significant negative'),
+                plt.Line2D([0], [0], color='purple', lw=2, label='Significant positive'),
+                plt.Line2D([0], [0], color='green', lw=2, label='Significant negative')
+            ])
+
+        if node_colors is not None:
+            for node, color in node_colors.items():
+                if node in network.index:
+                    legend_elements.append(
+                        plt.Line2D([0], [0], marker='o', color='w',
+                                markerfacecolor=color, markersize=10, label=node)
+                    )
+
+        if legend_elements:
+            legend_ax = fig.add_axes([0.7, 0.55, 0.2, 0.3])  # [left, bottom, width, height]
+            legend_ax.axis('off')
+            legend_ax.legend(handles=legend_elements, loc='center', fontsize=legend_size)
+
+    plt.tight_layout()
     if show:
         plt.show()
     else:
@@ -345,7 +395,9 @@ def chord_plot(
     show=True,
     title=None,
     label_size=10,
-    figsize=(8, 8),
+    figsize=(10, 8),
+    show_legend=True,
+    legend_size=12
 ):
     """Plots a chord plot of a network
 
@@ -360,18 +412,24 @@ def chord_plot(
         title (str): Title of the plot. Defaults to None.
         label_size (int): Font size of the labels. Defaults to None.
         figsize (tuple): Size of the figure. Defaults to None.
+        show_legend (bool): Whether to show legend. Defaults to True.
+        legend_size (int): Font size for legend. Defaults to 12.
 
     Returns:
         tuple: A tuple containing the figure and axis objects.
     """
 
-    if isinstance(network, dict):
-        raise ValueError(
-            "Input should be a single matrix, not a sample. You may need to run \
-                calculate_overall_interactions() first or select an LR pair.")
+    if not isinstance(network, pd.DataFrame):
+        raise ValueError("Input should be a dataframe.")
 
     network = network.transpose()
+    
+    # Create figure with gridspec to accommodate legend
     fig = plt.figure(figsize=figsize)
+    gs = gridspec.GridSpec(1, 2, width_ratios=[4, 1], wspace=0)
+    
+    # Main chord diagram area
+    ax = fig.add_subplot(gs[0])
 
     flux = network.values
 
@@ -392,7 +450,6 @@ def chord_plot(
     else:
         color_list = None
 
-    ax = plt.axes([0, 0, 1, 1])
     nodePos = plot_helper.chordDiagram(flux, ax, lim=1.25, colors=color_list)
     ax.axis("off")
     prop = dict(fontsize=label_size, ha="center", va="center")
@@ -401,7 +458,25 @@ def chord_plot(
         x, y = nodePos[i][0:2]
         if label_size != 0:
             ax.text(x, y, nodes[i], rotation=nodePos[i][2], **prop)
+
+    if show_legend and colors is not None:
+        # Add the legend in the right subplot
+        legend_ax = fig.add_subplot(gs[1])
+        legend_ax.axis('off')
+        
+        legend_elements = []
+        for node, color in colors.items():
+            if node in cell_names:
+                legend_elements.append(
+                    plt.Line2D([0], [0], marker='o', color='w',
+                            markerfacecolor=color, markersize=10, label=node)
+                )
+        
+        if legend_elements:
+            legend_ax.legend(handles=legend_elements, loc='center', fontsize=legend_size)
+
     fig.suptitle(title, fontsize=12, fontweight="bold")
+    plt.tight_layout()
 
     if show:
         plt.show()
@@ -529,6 +604,7 @@ def silhouette_scores_plot(
 
 def lr_barplot(
     sample,
+    assay="raw",
     n=15,
     x_label_size=24,
     y_label_size=24,
@@ -540,7 +616,8 @@ def lr_barplot(
     """Plots a bar plot of LR pairs and their proportions for a sample.
 
     Args:
-        sample (dict): A dictionary of LR pairs.
+        sample (CCIData): The CCIData object.
+        assay (str): The assay to use. Defaults to "raw".
         n (int): Number of LR pairs to plot. If None, plot all LR pairs. Defaults to
         15.
         x_label_size (int): Font size for x-axis label. Defaults to 24.
@@ -553,10 +630,11 @@ def lr_barplot(
         matplotlib.figure.Figure: The figure
     """
 
-    if not isinstance(sample, dict):
-        raise ValueError("The sample must be a dict of LR matrices.")
+    if assay not in sample.assays:
+        raise ValueError("Assay not found in sample.")
 
-    interactions = [(lr, df.sum().sum()) for (lr, df) in sample.items()]
+    interactions = [(lr, df.sum().sum()) for (lr, df) \
+        in sample.assays[assay]['cci_scores'].items()]
     interactions.sort(key=lambda x: x[1])
     interactions = interactions[-n:]
     keys, values = zip(*interactions)

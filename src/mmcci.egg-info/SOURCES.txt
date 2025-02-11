@@ -7,6 +7,7 @@ src/mmcci/CCIData_class.py
 src/mmcci/__init__.py
 src/mmcci/analysis.py
 src/mmcci/integration.py
+src/mmcci/io.py
 src/mmcci/plot_helper.py
 src/mmcci/plotting.py
 src/mmcci/scoring.py

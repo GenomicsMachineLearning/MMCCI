@@ -522,7 +522,6 @@ def run_gsea(
     )
         
     if show_dotplot:
-        
         try:
             ax = dotplot(
                 enr.results,
@@ -586,7 +585,8 @@ def pathway_subset(
     grouped_p_values = {}
     
     if assay_name is None:
-        assay_name = "+".join(terms)
+        # make assay name based on terms
+        assay_name = "+".join(terms)    
         
     if assay not in sample.assays:
         raise ValueError(f"Assay {assay} not found in sample.")
@@ -600,7 +600,7 @@ def pathway_subset(
         for gene in gene_list:
             genes.extend(gene.lower().split(";"))
 
-    for key in sample.keys():
+    for key in sample.assays[assay]['cci_scores'].keys():
         lig, rec = key.lower().split("_")
         if strict:
             if lig in genes and rec in genes:
@@ -610,11 +610,13 @@ def pathway_subset(
             if lig in genes or rec in genes:
                 grouped_cci_scores[key] = sample.assays[assay]['cci_scores'][key]
                 grouped_p_values[key] = sample.assays[assay]['p_values'][key]
+                
+    print(f"Number of interactions in {assay_name}: {len(grouped_cci_scores)}")
 
     sample.assays[assay_name] = {}
     sample.assays[assay_name]['cci_scores'] = grouped_cci_scores
     sample.assays[assay_name]['p_values'] = grouped_p_values
-    sample.calc_overall(assay_name)
+    sample = sample.calc_overall(assay_name)
     
     return sample
 
