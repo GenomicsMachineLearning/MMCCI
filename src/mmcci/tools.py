@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 import scanpy as sc
 from typing import Dict, List, Optional, Union
-from CCIData import CCIData
+
+from .CCIData_class import CCIData
 
 
 def align_dataframes(m1, m2, fill_value=0):

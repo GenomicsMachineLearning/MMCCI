@@ -581,6 +581,8 @@ def lrs_per_celltype(
     sample,
     sender,
     receiver,
+    assay="raw",
+    key="cci_scores",
     p_vals=None,
     n=15,
     x_label_size=24,
@@ -594,9 +596,11 @@ def lrs_per_celltype(
     type pair along with p_values (optional).
 
     Args:
-        sample (dict): A dictionary of LR pairs.
+        sample (CCIData): The CCIData object.
         sender (str): The sender cell type.
         receiver (str): The receiver cell type.
+        assay (str): The assay to use. Defaults to "raw".
+        key (str): The key to use. Defaults to "cci_scores".
         p_vals (dict): A dictionary of p-values. Defaults to None.
         n (int): Number of LR pairs to plot. Defaults to 15.
         x_label_size (int): Font size for x-axis label. Defaults to 24.
@@ -609,7 +613,7 @@ def lrs_per_celltype(
         matplotlib.figure.Figure: The figure
     """
 
-    pairs = an.get_lrs_per_celltype(sample, sender, receiver)
+    pairs = sample.get_lr_proportions(sender, receiver, assay, key)
     keys = list(pairs.keys())[:n]
     values = list(pairs.values())[:n]
     keys.reverse()

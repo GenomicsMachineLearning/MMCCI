@@ -8,41 +8,21 @@ from tqdm import tqdm
 
 from . import scoring as sc
 from . import tools as tl
+from .CCIData_class import CCIData
 
 
-def normalise_within_tech(samples, sample_sizes, target=None):
-    """Normalizes LR matrices within a list of samples to a target sample based on
-    number of spots to account for differences in sample size.
-
-    Args:
-        samples (list): A list of dictionaries of LR matrices.
-        sample_sizes (list): A list of number of spots for each sample.
-        target (int) (optional): A target sample size to normalize to. If not provided,
-        the first sample's size is used.
-
-    Returns:
-        list: The list of samples with normalized matrices.
-    """
-
-    if not isinstance(samples, list):
-        raise ValueError("Samples must be a list of dicts of LR matrices.")
-
-    if target is None:
-        target = sample_sizes[0]
-
-    for i, sample in enumerate(samples):
-        for lr, matrix in sample.items():
-            samples[i][lr] = matrix * (target / sample_sizes[i])
-
-    return samples
-
-
-def get_lr_pairs(samples, method=">=50%"):
+def get_lr_pairs(
+    samples: list,
+    assay = "raw",
+    method = ">=50%"
+    ) -> list:
     """Identifies the LR pairs present in a list of samples according to the given
     method.
 
     Args:
-        samples (list): A list of dictionaries of LR matrices
+        samples (list): A list of CCIData objects.
+        assay (str) (optional): The assay to use for identifying LR pairs. Defaults to
+        "raw".
         method (str) (optional): The method to use for identifying LR pairs. Options are
         "all", ">=50%", ">50%", and "any". Defaults to ">=50%".
 
@@ -50,14 +30,11 @@ def get_lr_pairs(samples, method=">=50%"):
         list: A list of LR pairs that are present in a majority of samples
     """
 
-    if not isinstance(samples, list):
-        raise ValueError("Samples must be a list of dicts of LR matrices.")
-
     lr_pairs_counts = {}
     lr_pairs = []
 
     for sample in samples:
-        for lr_pair, matrix in sample.items():
+        for lr_pair, matrix in sample.assays[assay]['cci_scores'].items():
             if sum(sum(matrix.values)) != 0:
                 lr_pairs_counts[lr_pair] = lr_pairs_counts.setdefault(lr_pair, 0) + 1
 
@@ -79,273 +56,312 @@ def get_lr_pairs(samples, method=">=50%"):
     return lr_pairs
 
 
-def subset_samples(samples, lr_pairs):
-    """Subsets each sample in samples to only contain the LR pairs in lr_pairs.
-
+def calc_scale_factors(
+    samples, 
+    method="mean", 
+    assay="raw", 
+    group_key="platform"
+    ) -> dict:
+    """Calculates the scale factors for normalizing matrices between different 
+    platforms.
+    
     Args:
-        samples (list): A list of dictionaries of LR matrices.
-        lr_pairs (list): A list of LR pairs to include in the subsetted samples.
-
+        samples (list): A list of CCIData objects.
+        method (str) (optional): The method to use for calculating scale factors.
+        assay (str) (optional): The assay to use for calculating scale factors. Defaults
+        to "raw".
+        group_key (str) (optional): The key to use for grouping samples. Defaults to
+        "platform".
+        
     Returns:
-        list: A list of subsetted dictionaries of LR matrices containing only
-        the LR pairs in lr_pairs.
+        dict: A dictionary where keys are LR pairs and values are the scale factors.
     """
-
-    if not isinstance(samples, list):
-        raise ValueError("Samples must be a list of dicts of LR matrices.")
-
-    subsetted_samples = []
-
+    
+    scale_factors = {}
+    
+    # get all the unique group keys
+    group_keys = set([sample.metadata[group_key] for sample in samples])
+    group_samples = {group_key: [] for group_key in group_keys}
+    
     for sample in samples:
-        subsetted_samples.append({lr: sample[lr] for lr in lr_pairs})
+        group_samples[sample.metadata[group_key]].append(sample)
+    
 
-    return subsetted_samples
-
-
-def normalise_between_tech(samples, method="mean"):
-    """Normalizes matrices between different technologies.
-
-    Args:
-        samples (list): A nested list of samples, organized by technology.
-        Example: [[t1s1, t1s2], [t2s1, t2s2]].
-        method (str) (optional): The normalization method, either "mean" or "sum".
-        Defaults to "mean". Normalises based on either the mean or sum of the values in
-        the matrix.
-
-    Returns:
-        The normalized nested list of samples.
-    """
-
-    if not isinstance(samples, list):
-        raise ValueError("Samples must be a list of dicts of LR matrices.")
-
-    tech_counts = []
-    for tech_samples in samples:
+    # get the scale factors for each group
+    for group, sample_list in group_samples.items():
         total_counts = 0
         lr_pair_count = 0
-        for pair, matrix in tech_samples.items():
-            lr_pair_count += 1
-            if method == "mean":
-                total_counts += matrix.mean().mean()
-            elif method == "sum":
-                total_counts += matrix.sum().sum()
-            else:
-                raise ValueError("Invalid method option.")
+        for sample in sample_list:    
+            for lr_pair, df in sample.assays[assay]['cci_scores'].items():
+                lr_pair_count += 1
+                if method == "mean":
+                    total_counts += df.mean().mean()
+                elif method == "max":
+                    total_counts += df.max().max()
+                elif method == "median":
+                    total_counts += df.median().median()
+                elif method == "sum":
+                    total_counts += df.sum().sum()
+                else:
+                    raise ValueError("Invalid method option.")
 
         total_counts = total_counts / lr_pair_count
-        tech_counts.append(total_counts)
+        scale_factors[group] = total_counts
+        
+    # divide each group by the max scale factor
+    max_scale_factor = max(scale_factors.values())
+    for group, scale_factor in scale_factors.items():
+        scale_factors[group] = max_scale_factor / scale_factor
+        
+    return scale_factors
 
-    for tech in range(len(samples)):
-        for lr, df in samples[tech].items():
-            factor = max(tech_counts) / tech_counts[tech]
-            samples[tech][lr] = df * factor
 
-    return samples
-
-
-def integrate_samples(samples, method=">=50%", sum=False, strict=False):
-    """Integrates matrices from different technologies.
-
+def lr_integration(
+    samples,
+    method=">=50%",
+    sum=False,
+    strict=False,
+    assay="raw",
+    integrate_pvals=True,
+    p_val_method="stouffer",
+    metadata=None
+    ) -> CCIData:
+    """Integrates a list of samples into a single sample per lr pair.
+    
     Args:
-        samples (list): A list of samples with different technologies.
+        samples (list): A list of CCIData objects.
         method (str) (optional): The method to use for identifying LR pairs. Options are
         "all", ">=50%", ">50%", and "any". Defaults to ">=50%".
         sum (bool) (optional): Whether to sum instead of multiply the matrices. Defaults
         to False.
         strict (bool) (optional): If True, only interactions where more than 50% of the 
         values are non-zero will be multiplied. Defaults to False.
-
+        assay (str) (optional): The assay to use for integrating samples. Defaults to
+        "raw".
+        integrate_pvals (bool) (optional): Whether to integrate p-values (if possible).
+        Defaults to True.
+        p_val_method (str) (optional): The method to use for combining p-values. Options
+        are "stouffer" and "fisher". Defaults to "stouffer".
+        metadata (dict) (optional): Additional metadata to include in the integrated
+        sample. Defaults to None.
+        
     Returns:
-        dict: A dictionary where keys are LR pairs and values are the integrated
-        matrices.
+        CCIData: The integrated sample.
     """
-
-    if not isinstance(samples, list):
-        raise ValueError("Samples must be a list of dicts of LR matrices.")
-
-    integrated = {}
-    lr_matrices = {}
+    
+    if len(samples) == 0:
+        raise ValueError("No samples provided.")
+    
+    for sample in samples:
+        if sample.assays[assay] is None:
+            raise ValueError("Sample does not have the specified assay.")
+        
+        if integrate_pvals:
+            if 'p_values' not in sample.assays[assay]:
+                integrate_pvals = False
+                print("No p-values found. Skipping p-value integration.")
+                
+    integrated_cci_scores = {}
+    lr_dfs = {}
 
     if len(samples) >= 2:
-        lr_pairs = sorted(get_lr_pairs(samples, method=method))
+        lr_pairs = sorted(get_lr_pairs(samples, assay=assay, method=method))
     else:
         raise ValueError("Integration needs at least two samples")
 
     for i in range(len(lr_pairs)):
         lr = lr_pairs[i]
 
-        for tech in range(len(samples)):
-            if lr in samples[tech]:
-                if lr in lr_matrices:
-                    lr_matrices[lr].append(samples[tech][lr])
+        for j in range(len(samples)):
+            if lr in samples[j].assays[assay]['cci_scores']:
+                if lr in lr_dfs:
+                    lr_dfs[lr].append(samples[j].assays[assay]['cci_scores'][lr])
                 else:
-                    lr_matrices[lr] = [samples[tech][lr]]
+                    lr_dfs[lr] = [samples[j].assays[assay]['cci_scores'][lr]]
 
-    with tqdm(total=len(lr_pairs), desc="Integrating LR matrices") as pbar:
-        for lr, matrices in lr_matrices.items():
-            if len(matrices) == 2:
+    with tqdm(total=len(lr_pairs), desc="Integrating LR CCI scores") as pbar:
+        for lr, dfs in lr_dfs.items():
+            if len(dfs) == 2:
                 if sum:
-                    matrices[0], matrices[1] = tl.align_dataframes(matrices[0], 
-                                                                   matrices[1])
-                    integrated[lr] = matrices[0] + matrices[1]
-                    integrated[lr] = integrated[lr] / 2
-                    integrated[lr] = integrated[lr].fillna(0)
+                    dfs[0], dfs[1] = tl.align_dataframes(dfs[0], dfs[1])
+                    integrated_cci_scores[lr] = dfs[0] + dfs[1]
+                    integrated_cci_scores[lr] = integrated_cci_scores[lr] / 2
+                    integrated_cci_scores[lr] = integrated_cci_scores[lr].fillna(0)
                 else:
-                    integrated[lr] = (matrices[0] * matrices[1]).fillna(0)
-                    integrated[lr] = np.sqrt(integrated[lr]).fillna(0)
-            elif len(matrices) > 2:
+                    integrated_cci_scores[lr] = (dfs[0] * dfs[1]).fillna(0)
+                    integrated_cci_scores[lr] = \
+                        np.sqrt(integrated_cci_scores[lr]).fillna(0)
+                        
+            elif len(dfs) > 2:
                 if sum:
-                    integrated[lr] = matrices[0]
-                    for i in range(1, len(matrices)):
-                        integrated[lr], matrices[i] = tl.align_dataframes(
-                            integrated[lr], matrices[i])
-                        integrated[lr] = integrated[lr] + matrices[i]
-                    integrated[lr] = integrated[lr] / len(matrices)
-                    integrated[lr] = integrated[lr].fillna(0)
+                    integrated_cci_scores[lr] = dfs[0]
+                    for i in range(1, len(dfs)):
+                        integrated_cci_scores[lr], dfs[i] = tl.align_dataframes(
+                            integrated_cci_scores[lr], dfs[i])
+                        integrated_cci_scores[lr] = \
+                            integrated_cci_scores[lr] + dfs[i]
+                    integrated_cci_scores[lr] = \
+                        integrated_cci_scores[lr] / len(dfs)
+                    integrated_cci_scores[lr] = integrated_cci_scores[lr].fillna(0)
                 else:
-                    integrated[lr] = sc.multiply_non_zero_values(matrices, 
+                    integrated_cci_scores[lr] = sc.multiply_non_zero_values(dfs, 
                                                                  strict=strict)
+                    
             else:
-                integrated[lr] = matrices[0]
+                integrated_cci_scores[lr] = dfs[0]
             tqdm.update(pbar, 1)
+
+    if integrate_pvals:
+        integrated_p_values = {}
+        lr_dfs = {}
+        
+        lr_pairs = set()
+        for sample in samples:
+            lr_pairs.update(sample.assays[assay]['p_values'].keys())
+        lr_pairs = list(lr_pairs)
+
+        for i in range(len(lr_pairs)):
+            lr = lr_pairs[i]
+
+            for j in range(len(samples)):
+                if lr in samples[j].assays[assay]['p_values']:
+                    if lr in lr_dfs:
+                        lr_dfs[lr].append(samples[j].assays[assay]['p_values'][lr])
+                    else:
+                        lr_dfs[lr] = [samples[j].assays[assay]['p_values'][lr]]
+
+        with tqdm(total=len(lr_dfs), desc="Integrating p values") as pbar:
+            for lr, dfs in lr_dfs.items():
+                integrated_p_values[lr] = \
+                    _correct_pvals_matrix(dfs, method=p_val_method)
+                pbar.update(1)
+                
+    if metadata is None:
+        metadata = {'platform': 'integrated'}
+        
+    integrated = CCIData(
+        cci_scores=integrated_cci_scores,
+        p_values=integrated_p_values,
+        other_metadata=metadata
+    )
+    
+    return integrated
+
+
+def integrate_networks(
+    samples,
+    sum=False,
+    strict=False,
+    assay="raw",
+    network_key="network",
+    integrate_pvals=False,
+    p_val_method="stouffer",
+    p_val_key="network_p_values",
+    ) -> CCIData:
+    """Integrates a list of samples that are single networks into a single network.
+    
+    Args:
+        samples (list): A list of CCIData objects.
+        sum (bool) (optional): Whether to sum instead of multiply the matrices. Defaults
+        to False.
+        strict (bool) (optional): If True, only interactions where more than 50% of the 
+        values are non-zero will be multiplied. Defaults to False.
+        assay (str) (optional): The assay to use for integrating samples. Defaults to
+        "raw".
+        network_key (str) (optional): The key to use for identifying the network. 
+        Defaults to "network".
+        integrate_pvals (bool) (optional): Whether to integrate p-values (if possible).
+        Defaults to False.
+        p_val_method (str) (optional): The method to use for combining p-values. Options
+        are "stouffer" and "fisher". Defaults to "stouffer".
+        p_val_key (str) (optional): The key to use for identifying p-values. Defaults to
+        "network_p_values".
+        
+    Returns:
+        CCIData: The integrated sample.
+    """
+    
+    if len(samples) < 2:
+        raise ValueError("Integration needs at least two samples.")
+    
+    networks = []
+    integrated_network = None
+    integrated_p_values = None
+    
+    for sample in samples:
+        if sample.assays[assay] is None:
+            raise ValueError("Sample does not have the specified assay.")
+        
+        if integrate_pvals:
+            if p_val_key is None:
+                raise ValueError("No p-value key provided.")
+            
+            if p_val_key not in sample.assays[assay]:
+                raise ValueError("Sample does not have the specified p-value key.")
+            
+        networks.append(sample.assays[assay][network_key])
+            
+    if len(networks) == 2:
+        if sum:
+            networks[0], networks[1] = tl.align_dataframes(networks[0], networks[1])
+            integrated_network = networks[0] + networks[1]
+            integrated_network = integrated_network / 2
+            integrated_network = integrated_network.fillna(0)
+        else:
+            integrated_network = (networks[0] * networks[1]).fillna(0)
+            integrated_network = np.sqrt(integrated_network).fillna(0)
+            
+    elif len(networks) > 2:
+        if sum:
+            integrated_network = networks[0]
+            for i in range(1, len(networks)):
+                integrated_network, networks[i] = tl.align_dataframes(
+                    integrated_network, networks[i])
+                integrated_network = integrated_network + networks[i]
+            integrated_network = integrated_network / len(networks)
+            integrated_network = integrated_network.fillna(0)
+        else:
+            integrated_network = sc.multiply_non_zero_values(networks, strict=strict)
+
+    if integrate_pvals:
+        p_values = []
+        
+        for sample in samples:
+            p_values.append(sample.assays[assay][p_val_key])
+        
+        integrated_p_values = _correct_pvals_matrix(p_values, method=p_val_method)
+        
+    integrated = CCIData(
+        network=integrated_network,
+        network_p_values=integrated_p_values
+    )
 
     return integrated
 
 
-def calculate_overall_interactions(sample, normalisation=True):
-    """Calculates an overall interaction matrix by combining matrices for different LR
-    pairs within a sample.
+def _correct_pvals_matrix(
+    dfs, 
+    method="stouffer"
+    ):
+    
+    result_df = dfs[0]
 
-    Args:
-        sample (dict): A sample containing matrices for different LR pairs.
+    for i in range(len(dfs)):
+        dfs[i], result_df = tl.align_dataframes(
+            dfs[i], result_df, fill_value=np.NaN)
 
-    Returns:
-        pd.DataFrame: A matrix representing the overall interactions.
-    """
-
-    if not isinstance(sample, dict):
-        raise ValueError("The sample must be a dict of dicts of LR matrices.")
-
-    total = None
-    for lr in sample.keys():
-        if sample[lr].sum().sum() > 0:
-            if total is not None:
-                if normalisation:
-                    total = total + sample[lr] / sample[lr].sum().sum()
-                else:
-                    total = total + sample[lr]
-                total = total.fillna(0)
-            else:
-                if normalisation:
-                    total = sample[lr] / sample[lr].sum().sum()
-                else:
-                    total = sample[lr]
-                total = total.fillna(0)
-
-    if total is None:
-        return None
-
-    total = total / total.sum().sum()
-    total = total.fillna(0)
-
-    return total
-
-
-def correct_pvals_matrix(dataframes, method="stouffer"):
-    """Corrects p-values across a list of pandas DataFrames.
-
-    Args:
-        dataframes (list): A list of pandas DataFrames with p vals to combine.
-        method (str) (optional): The method to use for combining p-values. Options are
-        "stouffer" and "fisher". Defaults to "stouffer".
-
-    Returns:
-        pd.DataFrame: A DataFrame with corrected p-values.
-    """
-
-    result_df = dataframes[0]
-
-    for i in range(len(dataframes)):
-        dataframes[i], result_df = tl.align_dataframes(
-            dataframes[i], result_df, fill_value=np.NaN)
-
-    for i in range(len(dataframes)):
-        dataframes[i], result_df = tl.align_dataframes(
-            dataframes[i], result_df, fill_value=np.NaN)
+    for i in range(len(dfs)):
+        dfs[i], result_df = tl.align_dataframes(
+            dfs[i], result_df, fill_value=np.NaN)
 
     result_df = result_df.astype(np.float64)
     for i, row in result_df.iterrows():
         for j in row.index:
-            values = [df.loc[i, j] for df in dataframes]
+            values = [df.loc[i, j] for df in dfs]
             values = [
                 0.00000000001 if x == 0 else (
                     0.9999999999 if x == 1 else x) for x in values]
             values = [x for x in values if not np.isnan(x)]
-            result_df.loc[i, j] = stats.combine_pvalues(values, method=method, )[1]
+            result_df.loc[i, j] = stats.combine_pvalues(values, method=method)[1]
 
     return result_df
-
-
-def integrate_p_vals(samples, method="stouffer"):
-    """Integrates p-values from different samples.
-
-    Args:
-        samples (list): A list of dictionaries of LR matrices.
-        method (str) (optional): The method to use for combining p-values. Options
-        are "stouffer" and "fisher". Defaults to "stouffer".
-
-    Returns:
-        dict: A dictionary where keys are LR pairs and values are the integrated
-        p-values.
-    """
-
-    if not isinstance(samples, list):
-        raise ValueError("Samples must be a list of dicts of LR matrices.")
-
-    integrated = {}
-    lr_matrices = {}
-
-    lr_pairs = set()
-    for sample in samples:
-        lr_pairs.update(sample.keys())
-    lr_pairs = list(lr_pairs)
-
-    for i in range(len(lr_pairs)):
-        lr = lr_pairs[i]
-
-        for tech in range(len(samples)):
-            if lr in samples[tech]:
-                if lr in lr_matrices:
-                    lr_matrices[lr].append(samples[tech][lr])
-                else:
-                    lr_matrices[lr] = [samples[tech][lr]]
-
-    with tqdm(total=len(lr_matrices), desc="Integrating p values") as pbar:
-        for lr, matrices in lr_matrices.items():
-            integrated[lr] = correct_pvals_matrix(matrices, method=method)
-            pbar.update(1)
-
-    return integrated
-
-
-def remove_insignificant(sample, p_vals, cutoff=0.05):
-    """Removes insignificant interactions from a sample based on p-values.
-
-    Args:
-        sample (dict): A sample containing matrices for different LR pairs.
-        p_vals (dict): A dictionary of p-values for the LR pairs in the sample.
-
-    Returns:
-        dict: A dictionary of matrices with insignificant interactions set to 0.
-    """
-
-    corrected_sample = {}
-    sample_copy = copy.deepcopy(sample)
-    for lr, matrix in sample_copy.items():
-        for i, row in matrix.iterrows():
-            for j in row.index:
-                if p_vals[lr].loc[i, j] > cutoff:
-                    matrix.loc[i, j] = 0
-        corrected_sample[lr] = matrix
-
-    return corrected_sample
