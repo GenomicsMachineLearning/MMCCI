@@ -9,6 +9,17 @@ from . import plot_helper
 from . import analysis as an
 
 
+from matplotlib import pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
+import networkx as nx
+import numpy as np
+import pandas as pd
+import matplotlib.gridspec as gridspec
+
+from . import plot_helper
+from . import analysis as an
+
+
 def network_plot(
     network,
     p_vals=None,
@@ -17,10 +28,10 @@ def network_plot(
     remove_unconnected=True,
     show_labels=False,
     p_val_cutoff=0.05,
-    edge_weight=20,
+    edge_weight=50,
     text_size=15,
-    node_size=700,
-    figsize=(10, 8),
+    node_size=2500,
+    figsize=None,
     arrowsize=20,
     node_label_dist=1,
     p_val_text_size=10,
@@ -30,6 +41,8 @@ def network_plot(
     show=True,
     show_legend=True,
     legend_size=12,
+    title=None,
+    title_size=14
 ):
     """Plots a network with optional edge significance highlighting and node
     coloring based on in-degree and out-degree difference.
@@ -51,10 +64,10 @@ def network_plot(
         edges. Defaults to 0.05.
         edge_weight (float, optional): The base weight for edges. Defaults to 20.
         text_size (int, optional): The font size for node labels. Defaults to 15.
-        node_size (int, optional): The size of the nodes. Defaults to 700.
-        figsize (tuple, optional): The size of the figure. Defaults to (10, 8).
+        node_size (int, optional): The size of the nodes. Defaults to 2500.
+        figsize (tuple, optional): The size of the figure. Defaults to None.
         arrowsize (int, optional): The size of the arrow heads for edges. Defaults to
-        20.
+        50.
         node_label_dist (float, optional): A factor for adjusting the distance between
         nodes and labels. Defaults to 1.
         p_val_text_size (int, optional): The font size for p-value labels. Defaults to
@@ -68,6 +81,8 @@ def network_plot(
         show (bool, optional): Whether to show the plot or not. Defaults to True.
         show_legend (bool, optional): Whether to show legend. Defaults to False.
         legend_size (int, optional): Font size for legend. Defaults to 12.
+        title (str, optional): Title of the plot. Defaults to None.
+        title_size (int, optional): Font size for title. Defaults to 14.
 
     Returns:
         tuple: A tuple containing the figure and axis objects.
@@ -75,10 +90,16 @@ def network_plot(
 
     if not isinstance(network, pd.DataFrame):
         raise ValueError("Input should be a dataframe.")
+    
+    if figsize is None:
+        if show_legend:
+            figsize = (10, 8)
+        else:
+            figsize = (8, 8)
 
     # Adjust the figure layout to accommodate the legend on the right
     fig = plt.figure(figsize=figsize)
-    gs = gridspec.GridSpec(1, 2, width_ratios=[5, 1], wspace=0.2)  # Adjust width_ratios as needed
+    gs = gridspec.GridSpec(1, 2, width_ratios=[5, 1], wspace=0.2)
 
     # Main plot area
     ax = fig.add_subplot(gs[0])
@@ -92,6 +113,8 @@ def network_plot(
     if normalise:
         if network.min().min() >= 0:
             network = network / network.sum().sum()
+        else:
+            network = network / network.abs().sum().sum()
     network_abs = abs(network)
 
     if normalise:
@@ -216,6 +239,7 @@ def network_plot(
     )
 
     if diff_plot:
+        # Draw non-self edges first
         nx.draw_networkx_edges(
             G_network,
             pos,
@@ -226,9 +250,9 @@ def network_plot(
             arrowstyle="->",
             arrowsize=arrowsize,
             edge_color="pink"
-            # edgelist=non_sig,
         )
-
+        
+        # Same pattern for non-sig down edges
         nx.draw_networkx_edges(
             G_network,
             pos,
@@ -239,10 +263,10 @@ def network_plot(
             arrowstyle="->",
             arrowsize=arrowsize,
             edge_color="lightgreen"
-            # edgelist=non_sig,
-        )
+            )
 
     else:
+        # Non-self edges
         nx.draw_networkx_edges(
             G_network,
             pos,
@@ -252,9 +276,9 @@ def network_plot(
             arrows=True,
             arrowstyle="->",
             arrowsize=arrowsize,
-            # edgelist=non_sig,
         )
 
+        # Same for non-sig down edges
         nx.draw_networkx_edges(
             G_network,
             pos,
@@ -264,9 +288,9 @@ def network_plot(
             arrows=True,
             arrowstyle="->",
             arrowsize=arrowsize,
-            # edgelist=non_sig,
         )
 
+    # Significant up edges
     nx.draw_networkx_edges(
         G_network,
         pos,
@@ -275,11 +299,11 @@ def network_plot(
         width=edge_thickness_sig_up,
         arrows=True,
         arrowstyle="->",
-        # edgelist=sig_up,
         arrowsize=arrowsize,
         edge_color="purple",
     )
 
+    # Significant down edges  
     nx.draw_networkx_edges(
         G_network,
         pos,
@@ -288,7 +312,6 @@ def network_plot(
         width=edge_thickness_sig_down,
         arrows=True,
         arrowstyle="->",
-        # edgelist=sig_down,
         arrowsize=arrowsize,
         edge_color="green",
     )
@@ -348,7 +371,7 @@ def network_plot(
     
     if show_legend:
         # Create a color bar in the bottom-right corner
-        color_bar_ax = fig.add_axes([0.75, 0.2, 0.05, 0.2])  # [left, bottom, width, height]
+        color_bar_ax = fig.add_axes([0.77, 0.2, 0.05, 0.2])
         if sum(abs(value) for value in in_out_diff.values()) != 0:
             sm = plt.cm.ScalarMappable(cmap=outer_node_cmap,
                                     norm=plt.Normalize(vmin=-max_diff, vmax=max_diff))
@@ -361,10 +384,14 @@ def network_plot(
         legend_elements = []
         if diff_plot:
             legend_elements.extend([
-                plt.Line2D([0], [0], color='pink', lw=2, label='Non-significant positive'),
-                plt.Line2D([0], [0], color='lightgreen', lw=2, label='Non-significant negative'),
-                plt.Line2D([0], [0], color='purple', lw=2, label='Significant positive'),
-                plt.Line2D([0], [0], color='green', lw=2, label='Significant negative')
+                plt.Line2D([0], [0], color='pink', lw=2, 
+                           label='Non-significant positive'),
+                plt.Line2D([0], [0], color='lightgreen', lw=2, 
+                           label='Non-significant negative'),
+                plt.Line2D([0], [0], color='purple', lw=2, 
+                           label='Significant positive'),
+                plt.Line2D([0], [0], color='green', lw=2, 
+                           label='Significant negative')
             ])
 
         if node_colors is not None:
@@ -374,11 +401,22 @@ def network_plot(
                         plt.Line2D([0], [0], marker='o', color='w',
                                 markerfacecolor=color, markersize=10, label=node)
                     )
+        else:
+            for i in range(len(G_network.nodes)):
+                legend_elements.append(
+                    plt.Line2D([0], [0], marker='o', color='w',
+                            markerfacecolor=node_colors_list[i], markersize=10, 
+                            label=list(G_network.nodes.keys())[i])
+                )
 
         if legend_elements:
-            legend_ax = fig.add_axes([0.7, 0.55, 0.2, 0.3])  # [left, bottom, width, height]
+            legend_ax = fig.add_axes([0.7, 0.55, 0.2, 0.3])
             legend_ax.axis('off')
-            legend_ax.legend(handles=legend_elements, loc='center', fontsize=legend_size)
+            legend_ax.legend(handles=legend_elements, loc='center', 
+                             fontsize=legend_size)
+
+    if title is not None:
+        plt.suptitle(title, fontsize=title_size, y = 0.875, fontweight="bold")
 
     plt.tight_layout()
     if show:
@@ -389,14 +427,15 @@ def network_plot(
 
 def chord_plot(
     network,
-    min_int=0.01,
+    min_int=0.001,
     n_top_ccis=10,
     colors=None,
     show=True,
     title=None,
+    title_size=14,
     label_size=10,
-    figsize=(10, 8),
-    show_legend=True,
+    figsize=None,
+    show_legend=False,
     legend_size=12
 ):
     """Plots a chord plot of a network
@@ -410,9 +449,10 @@ def chord_plot(
         to None.
         show (bool): Whether to show plot or not. Defaults to True.
         title (str): Title of the plot. Defaults to None.
+        title_size (int): Font size of the title. Defaults to 14.
         label_size (int): Font size of the labels. Defaults to None.
         figsize (tuple): Size of the figure. Defaults to None.
-        show_legend (bool): Whether to show legend. Defaults to True.
+        show_legend (bool): Whether to show legend. Defaults to False.
         legend_size (int): Font size for legend. Defaults to 12.
 
     Returns:
@@ -424,12 +464,19 @@ def chord_plot(
 
     network = network.transpose()
     
+    if figsize is None:
+        if show_legend:
+            figsize = (10, 8)
+        else:
+            figsize = (8, 8)
+    
     # Create figure with gridspec to accommodate legend
     fig = plt.figure(figsize=figsize)
-    gs = gridspec.GridSpec(1, 2, width_ratios=[4, 1], wspace=0)
-    
-    # Main chord diagram area
-    ax = fig.add_subplot(gs[0])
+    if show_legend:
+        gs = gridspec.GridSpec(1, 2, width_ratios=[4, 1], wspace=0)
+        ax = fig.add_subplot(gs[0])
+    else:
+        ax = plt.axes([0, 0, 1, 1])
 
     flux = network.values
 
@@ -473,9 +520,12 @@ def chord_plot(
                 )
         
         if legend_elements:
-            legend_ax.legend(handles=legend_elements, loc='center', fontsize=legend_size)
+            legend_ax.legend(handles=legend_elements, loc='center', 
+                             fontsize=legend_size)
 
-    fig.suptitle(title, fontsize=12, fontweight="bold")
+    if title is not None:
+        fig.suptitle(title, fontsize=title_size, y=0.95, fontweight="bold")
+
     plt.tight_layout()
 
     if show:
@@ -612,6 +662,7 @@ def lr_barplot(
     y_tick_size=12,
     figsize=(6, 5),
     show=True,
+    title=None,
 ):
     """Plots a bar plot of LR pairs and their proportions for a sample.
 
@@ -625,6 +676,7 @@ def lr_barplot(
         x_tick_size (int): Font size for tick labels. Defaults to 14.
         y_tick_size (int): Font size for tick labels. Defaults to 12.
         figsize (tuple): Size of the figure. Defaults to (10, 8).
+        title (str) (optional): Title for the plot. Defaults to None.
 
     Returns:
         matplotlib.figure.Figure: The figure
@@ -648,6 +700,11 @@ def lr_barplot(
     plt.tick_params(axis='x', which='major', labelsize=x_tick_size)
     plt.tick_params(axis='y', which='major', labelsize=y_tick_size)
 
+    if title:
+        plt.title(title, pad=20, fontsize=14)
+    
+    plt.tight_layout()
+
     if show:
         plt.show()
     else:
@@ -657,8 +714,8 @@ def lr_barplot(
 
 def lrs_per_celltype(
     sample,
-    sender,
-    receiver,
+    sender = None,
+    receiver = None,
     assay="raw",
     key="cci_scores",
     p_vals=None,
@@ -669,14 +726,15 @@ def lrs_per_celltype(
     y_tick_size=12,
     figsize=(6, 5),
     show=True,
+    title=None,
 ):
     """Plots a bar plot of LR pairs and their proportions for a sender and receiver cell
     type pair along with p_values (optional).
 
     Args:
         sample (CCIData): The CCIData object.
-        sender (str): The sender cell type.
-        receiver (str): The receiver cell type.
+        sender (str): The sender cell type. Defaults to None.
+        receiver (str): The receiver cell type. Defaults to None.
         assay (str): The assay to use. Defaults to "raw".
         key (str): The key to use. Defaults to "cci_scores".
         p_vals (dict): A dictionary of p-values. Defaults to None.
@@ -686,6 +744,7 @@ def lrs_per_celltype(
         x_tick_size (int): Font size for tick labels. Defaults to 14.
         y_tick_size (int): Font size for tick labels. Defaults to 12.
         figsize (tuple): Size of the figure. Defaults to (10, 8).
+        title (str) (optional): Title for the plot. Defaults to None.
 
     Returns:
         matplotlib.figure.Figure: The figure
@@ -726,6 +785,11 @@ def lrs_per_celltype(
     ax.set_ylabel("LR Pair", fontsize=y_label_size)
     ax.tick_params(axis='x', which='major', labelsize=x_tick_size)
     ax.tick_params(axis='y', which='major', labelsize=y_tick_size)
+
+    if title:
+        plt.title(title, pad=20, fontsize=14)
+        
+    plt.tight_layout()
 
     if show:
         plt.show()

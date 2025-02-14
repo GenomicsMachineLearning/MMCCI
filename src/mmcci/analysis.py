@@ -131,72 +131,88 @@ def cell_network_clustering(
     n_clusters: int = 0, 
     method: str = "KMeans"
     ):
-    """Groups and ranks LR pairs using their clusters and dissimilarities.
+    """Groups ligand-receptor (LR) pairs into clusters based on their interaction network similarity.
+    
+    This function:
+    1. Separates LR pairs into those with single vs multiple interactions
+    2. Calculates dissimilarity scores between all pairs of LR networks
+    3. Performs clustering using either KMeans or Hierarchical clustering
+    4. Determines optimal cluster number if not specified
+    5. Creates new assays in the sample for each cluster
 
     Args:
-        sample (CCIData): The sample to cluster.
-        assay (str) (optional): The assay to use for the clustering. Defaults to 'raw'.
-        n_clusters (int) (optional): The desired number of clusters. If 0, the optimal
-        number is determined using silhouette analysis. Defaults to 0.
-        method (str) (optional): The clustering method to use. Defaults to 'KMeans'.
+        sample (CCIData): Sample containing LR interaction networks to cluster
+        assay (str): Name of assay containing interaction data to analyze
+        n_clusters (int): Number of desired clusters. If 0, determined automatically
+        method (str): Clustering method - either "KMeans" or "Hierarchical"
 
     Returns:
-        pd.DataFrame: A DataFrame with the cluster assignments for each sample.
+        CCIData: Sample with new assays added for each cluster found
+
+    Raises:
+        ValueError: If specified assay not found in sample
     """
-    
+
     if assay not in sample.assays:
         raise ValueError(f"Assay {assay} not found in sample.")
 
-    one_interaction_sample = {}
+    # Dictionary to store LR pairs with only one interaction
+    single_interaction_pairs = {}
 
-    # Function to check if the entire dataframe is zero
     def has_non_zero_values(df):
+        """Check if dataframe contains any non-zero values"""
         return not (df == 0).all().all()
 
-    # Filtering out key-value pairs with dataframes containing all zeros
-    sample_dict = {
+    # Get all LR pairs with non-zero interactions
+    multi_interaction_pairs = {
         key: value for key, value in sample.assays[assay]['cci_scores'].items()
         if has_non_zero_values(value)
-        }
+    }
     
-    for key, df in list(sample_dict.items()):
-        # Check if the dataframe has more than one unique value (excluding 0)
-        if (df.values.diagonal() == 0).sum() == df.shape[0] - 1 and (
-            df.values == 0
-        ).sum() == (df.shape[0] * df.shape[0]) - 1:
-            # If only one unique value (excluding 0), remove the entry from the
-            # dictionary
-            one_interaction_sample[key] = df
-            del sample_dict[key]
+    # Separate out LR pairs with only a single interaction
+    for lr_pair, interaction_matrix in list(multi_interaction_pairs.items()):
+        # Check if matrix has only one non-zero value (excluding diagonal)
+        diagonal_zeros = (interaction_matrix.values.diagonal() == 0).sum() 
+        total_zeros = (interaction_matrix.values == 0).sum()
+        matrix_size = interaction_matrix.shape[0]
+        
+        if (diagonal_zeros == matrix_size - 1 and 
+            total_zeros == (matrix_size * matrix_size) - 1):
+            single_interaction_pairs[lr_pair] = interaction_matrix
+            del multi_interaction_pairs[lr_pair]
 
-    if sample_dict is not None:
-        # Initialize an empty dataframe to store the results
-        result_df = pd.DataFrame(index=sample_dict.keys(), columns=sample_dict.keys())
-        # Iterate through the keys and compare the dataframes
-        print("Computing Dissimilarity Scores for multiple interactions...")
-        with tqdm(total=len(sample_dict), desc="Processing") as pbar:
-            for key1, df1 in sample_dict.items():
-                for key2, df2 in sample_dict.items():
-                    result = sco.dissimilarity_score(
-                        df1, df2, lmbda=0.5, only_non_zero=True
+    # Process LR pairs with multiple interactions
+    if multi_interaction_pairs:
+        multi_dissimilarity_matrix = pd.DataFrame(
+            index=multi_interaction_pairs.keys(), 
+            columns=multi_interaction_pairs.keys()
+        )
+        
+        print("Computing dissimilarity scores for complex interaction networks...")
+        with tqdm(total=len(multi_interaction_pairs), desc="Processing") as pbar:
+            for pair1, matrix1 in multi_interaction_pairs.items():
+                for pair2, matrix2 in multi_interaction_pairs.items():
+                    dissim_score = sco.dissimilarity_score(
+                        matrix1, matrix2, lmbda=0.5, only_non_zero=True
                     )
-                    # Store the result in the result_df
-                    result_df.loc[key1, key2] = result
+                    multi_dissimilarity_matrix.loc[pair1, pair2] = dissim_score
                 pbar.update(1)
-        final_clusters_multiple = _lr_cluster_helper(
-            result_df, sample_dict, n_clusters, method
+                
+        multi_interaction_clusters = _lr_cluster_helper(
+            multi_dissimilarity_matrix, multi_interaction_pairs, n_clusters, method
         )
 
-    if one_interaction_sample is not None:
+    # Process LR pairs with single interactions 
+    if single_interaction_pairs:
         # Initialize an empty dataframe to store the results
         result_df_one = pd.DataFrame(
-            index=one_interaction_sample.keys(), columns=one_interaction_sample.keys()
+            index=single_interaction_pairs.keys(), columns=single_interaction_pairs.keys()
         )
         # Iterate through the keys and compare the dataframes
         print("Computing Dissimilarity Scores for single interactions...")
-        with tqdm(total=len(one_interaction_sample), desc="Processing") as pbar:
-            for key1, df1 in one_interaction_sample.items():
-                for key2, df2 in one_interaction_sample.items():
+        with tqdm(total=len(single_interaction_pairs), desc="Processing") as pbar:
+            for key1, df1 in single_interaction_pairs.items():
+                for key2, df2 in single_interaction_pairs.items():
                     result = sco.dissimilarity_score(
                         df1, df2, lmbda=0.5, only_non_zero=True
                     )
@@ -206,14 +222,14 @@ def cell_network_clustering(
                 pbar.update(1)
                 
         total = None
-        for lr_pair in one_interaction_sample.keys():
-            if one_interaction_sample[lr_pair].sum().sum() > 0:
+        for lr_pair in single_interaction_pairs.keys():
+            if single_interaction_pairs[lr_pair].sum().sum() > 0:
                 if total is not None:
-                    total = total + one_interaction_sample[lr_pair] / \
-                    one_interaction_sample[lr_pair].sum().sum()
+                    total = total + single_interaction_pairs[lr_pair] / \
+                    single_interaction_pairs[lr_pair].sum().sum()
                 else:
-                    total = one_interaction_sample[lr_pair] / \
-                        one_interaction_sample[lr_pair].sum().sum()
+                    total = single_interaction_pairs[lr_pair] / \
+                        single_interaction_pairs[lr_pair].sum().sum()
                 total = total.fillna(0)
 
         total = total / total.sum().sum()
@@ -223,32 +239,42 @@ def cell_network_clustering(
             total.values.diagonal()
             == 0
         ).sum()
-        final_clusters_single = _lr_cluster_helper(
-            result_df_one, one_interaction_sample, n_clusters
+        single_interaction_clusters = _lr_cluster_helper(
+            result_df_one, single_interaction_pairs, n_clusters
         )
-        final_clusters_single["cluster"] = (
-            final_clusters_single["cluster"]
-            + max(final_clusters_multiple["cluster"])
+        single_interaction_clusters["cluster"] = (
+            single_interaction_clusters["cluster"]
+            + max(multi_interaction_clusters["cluster"])
             + 1
         )
 
-    final_clusters = pd.concat([final_clusters_multiple, final_clusters_single])
+    # Combine cluster assignments
+    final_cluster_assignments = pd.concat(
+        [multi_interaction_clusters, single_interaction_clusters]
+    )
 
-    for ind in final_clusters.index:
-        cluster = final_clusters["cluster"][ind]
-        if f"cluster_{cluster}" not in sample.assays:
-            sample.assays[f"cluster_{cluster}"] = {}
-            sample.assays[f"cluster_{cluster}"]['cci_scores'] = {}
-            sample.assays[f"cluster_{cluster}"]['p_values'] = {}
+    # Create new assays for each cluster in the sample
+    for lr_pair in final_cluster_assignments.index:
+        cluster_id = final_cluster_assignments["cluster"][lr_pair]
+        cluster_assay = f"cluster_{cluster_id}"
+        
+        # Initialize cluster assay if needed
+        if cluster_assay not in sample.assays:
+            sample.assays[cluster_assay] = {
+                'cci_scores': {},
+                'p_values': {}
+            }
             
-        sample.assays[f"cluster_{cluster}"]['cci_scores'][ind] = \
-            sample.assays[assay]['cci_scores'][ind]
-        sample.assays[f"cluster_{cluster}"]['p_values'][ind] = \
-            sample.assays[assay]['p_values'][ind]
+        # Add interaction matrices to cluster assay    
+        sample.assays[cluster_assay]['cci_scores'][lr_pair] = \
+            sample.assays[assay]['cci_scores'][lr_pair]
+        sample.assays[cluster_assay]['p_values'][lr_pair] = \
+            sample.assays[assay]['p_values'][lr_pair]
 
-    for assay in sample.assays:
-        if assay.startswith('cluster_'):
-            sample = sample.calc_overall(assay=assay)
+    # Calculate overall interactions for each cluster
+    for assay_name in sample.assays:
+        if assay_name.startswith('cluster_'):
+            sample = sample.calc_overall(assay=assay_name)
     
     return sample
 
@@ -365,11 +391,12 @@ def _lr_cluster_helper(result_df, sample, n_clusters=0, method="KMeans"):
 
     
 def lr_interaction_clustering(
-    sample, 
-    resolution=0.5, 
-    palette="Dark2_r", 
-    cell_colors=None, 
-    spot_size=1.5, 
+    sample,
+    resolution=0.5,
+    cluster_palette="Dark2_r",
+    cell_type_palette="tab20",
+    cell_colors=None,
+    spot_size=1.5,
     spatial_plot=True, 
     proportion_plot=True,
     return_adata=False,
@@ -382,10 +409,12 @@ def lr_interaction_clustering(
     sample (AnnData): An AnnData object that has been run through stLearn.
     resolution (float) (optional): The resolution to use for the clustering. Defaults to
     0.5.
-    palette (str) (optional): The palette to use for the UMAP plot. Defaults to
-    'Dark2_r'.
-    cell_colors (dict) (optional): A dictionary mapping cell types to colors. Defaults
-    to None.
+    cluster_palette (str) (optional): Name of matplotlib colormap to use for clusters.
+        Defaults to 'Dark2_r'.
+    cell_type_palette (str) (optional): Name of matplotlib colormap to use for cell types.
+        Defaults to 'tab20'.
+    cell_colors (dict) (optional): Dictionary mapping cell types to colors. If not provided,
+        colors will be generated from cell_type_palette. Defaults to None.
     spot_size (float) (optional): The size of the spots in the spatial plot. Defaults to
     1.5.
     spatial_plot (bool) (optional): Whether to show the spatial plot. Defaults to True.
@@ -399,9 +428,12 @@ def lr_interaction_clustering(
     AnnData: An AnnData object with the clustering results.
     """
 
-    LR = pd.DataFrame(sample.obsm["lr_scores"])
-    LR.columns = list(sample.uns["lr_summary"].index)
-    LR.index = sample.obs.index
+    if sample.adata is None:
+        raise ValueError("No AnnData object found in sample.")
+    
+    LR = pd.DataFrame(sample.adata.obsm["lr_scores"])
+    LR.columns = list(sample.adata.uns["lr_summary"].index)
+    LR.index = sample.adata.obs.index
 
     LR = sc.AnnData(LR)
     sc.pp.normalize_total(LR, inplace=True)
@@ -416,8 +448,8 @@ def lr_interaction_clustering(
     sc.tl.dendrogram(LR, groupby='leiden')
     sc.pl.rank_genes_groups_dotplot(LR, n_genes=10, groupby='leiden')
     
-    LR.obsm = sample.obsm
-    LR.uns = sample.uns
+    LR.obsm = sample.adata.obsm
+    LR.uns = sample.adata.uns
     LR.obs["leiden"] = LR.obs["leiden"].astype("int64")
 
     sc.pp.pca(LR)
@@ -425,26 +457,32 @@ def lr_interaction_clustering(
     sc.pp.neighbors(LR, use_rep="X_pca", n_neighbors=15)
     sc.tl.umap(LR)
     
-    sample.obs["LR_Cluster"] = LR.obs["leiden"].astype("str")
+    sample.adata.obs["LR_Cluster"] = LR.obs["leiden"].astype("str")
     
-    if spatial_plot:        
-        # sc.pl.umap(LR, color="LR_Cluster", palette=palette, legend_loc=None)
-        sc.pl.spatial(sample, color="LR_Cluster", size=spot_size, palette=palette, 
-                      **kwargs)
+    if spatial_plot:
+        sc.pl.spatial(sample.adata, color="LR_Cluster", size=spot_size, 
+                     palette=cluster_palette, **kwargs)
         
     if proportion_plot:
-        if "cell_type" in sample.uns:
-            # make any value less than 0.1 == 0 in sample.uns['cell_type']
-            sample.uns['cell_type'] = sample.uns['cell_type'].applymap(
+        if "cell_type" in sample.adata.uns:
+            # make any value less than 0.1 == 0 in adata.uns['cell_type']
+            sample.adata.uns['cell_type'] = sample.adata.uns['cell_type'].applymap(
                 lambda x: 0 if x < 0.1 else x)
             
-            merged_df = sample.uns['cell_type'].merge(sample.obs["LR_Cluster"], 
-                                                    left_index=True, right_index=True)
+            merged_df = sample.adata.uns['cell_type'].merge(
+                sample.adata.obs["LR_Cluster"], left_index=True, right_index=True)
             proportions = merged_df.groupby('LR_Cluster').mean()
             proportions = proportions.div(proportions.sum(axis=1), axis=0)
         else:
-            proportions = sample.obs.groupby('LR_Cluster')['cell_type'] \
+            proportions = sample.adata.obs.groupby('LR_Cluster')['cell_type'] \
                 .value_counts(normalize=True).unstack()
+
+        # Generate colors from cell_type_palette if cell_colors not provided 
+        if cell_colors is None:
+            unique_types = proportions.columns
+            default_colors = plt.get_cmap(cell_type_palette).colors
+            cell_colors = {ctype: default_colors[i % len(default_colors)] 
+                        for i, ctype in enumerate(unique_types)}
 
         fig, (ax1, ax2) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [4, 1]})
 
@@ -477,6 +515,7 @@ def run_gsea(
     show_barplot=True,
     top_term=5,
     figsize=(3,5),
+    return_results=True
 ):
     """Runs GSEA analysis on a sample.
 
@@ -495,9 +534,12 @@ def run_gsea(
         show_barplot (bool) (optional): Whether to show the barplot. Defaults to True.
         top_term (int) (optional): The number of top terms to show. Defaults to 5.
         figsize (tuple) (optional): The size of the figure. Defaults to (3,5).
+        return_results (bool) (optional): Whether to return the results DataFrame. 
+        Defaults to True.
 
     Returns:
-        pd.DataFrame: A DataFrame with the GSEA results.
+        pd.DataFrame or None: A DataFrame with the GSEA results if return_results=True, 
+        otherwise None.
     """
 
     gene_list = set()
@@ -554,7 +596,9 @@ def run_gsea(
         except:
             print("Could not plot barplot.")
 
-    return enr.results
+    if return_results:
+        return enr.results
+    return None
 
 
 def pathway_subset(

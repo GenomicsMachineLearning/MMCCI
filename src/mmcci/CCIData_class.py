@@ -39,7 +39,9 @@ class CCIData:
         
         self.metadata['n_spots'] = n_spots
         self.metadata['platform'] = platform
-        self.metadata.update(other_metadata)
+        
+        if other_metadata:
+            self.metadata.update(other_metadata)
 
         if cci_scores is not None:
             self.assays['raw']['cci_scores'] = cci_scores
@@ -64,6 +66,10 @@ class CCIData:
         for assay in self.assays.keys():
             assays[assay] = f"{len(self.assays[assay]['cci_scores'])} LR pairs"
             
+        if self.adata is not None:
+            return f"CCIData object with assays: {assays}, metadata: {self.metadata}, \
+                and AnnData object"
+        
         return f"CCIData object with assays: {assays} and metadata: {self.metadata}"
     
     
@@ -73,6 +79,10 @@ class CCIData:
         assays = {}
         for assay in self.assays.keys():
             assays[assay] = f"{len(self.assays[assay]['cci_scores'])} LR pairs"
+            
+        if self.adata is not None:
+            return f"CCIData object with assays: {assays}, metadata: {self.metadata}, \
+                and AnnData object"
             
         return f"CCIData object with assays: {assays} and metadata: {self.metadata}"
         
@@ -139,6 +149,24 @@ class CCIData:
         return self.adata
     
     
+    def get_cell_types(self, assay: str = "raw") -> List[str]:
+        """
+        Get cell types in a sample
+        
+        Args:
+            assay: Assay to get cell types from
+        
+        Returns:
+            List of cell types in the sample
+        """
+        cell_types = []
+        
+        for dfs in self.assays[assay]['cci_scores'].values():
+            cell_types.extend(dfs.index)
+            
+        return list(set(cell_types))
+    
+    
     def copy(self) -> 'CCIData':
         """
         Create a copy of the CCIData object
@@ -154,7 +182,7 @@ class CCIData:
         return cci_data
     
     
-    def rename_celltypes(self, 
+    def rename_cell_types(self, 
                          replacements: Dict[str, str],
                          assay = None) -> 'CCIData':
         """Renames cell types in a CCIData.

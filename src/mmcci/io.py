@@ -276,7 +276,7 @@ def save_CCIData(cci_data, path):
         pickle.dump(cci_data, f)
 
 
-def load_CCIData(path) -> CCIData:
+def read_CCIData(path) -> CCIData:
     """Loads a CCIData object from disk.
 
     Args:
