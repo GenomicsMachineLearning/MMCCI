@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import anndata as ad
+import pickle
 from typing import Dict, List, Optional, Union
 from copy import deepcopy
 
@@ -533,3 +534,13 @@ class CCIData:
             p_vals[lr_pair] = subset[lr_pair].at[sender, reciever]
             
         return p_vals
+
+
+    def save(self, path: str):        
+        """Saves a CCIData object to disk using pickle.
+
+        Args:
+            path (str): The path where to save the CCIData object.
+        """
+        with open(path, 'wb') as f:
+            pickle.dump(self, f)

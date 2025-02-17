@@ -265,17 +265,6 @@ def read_NATMI(path, n_spots=None) -> CCIData:
     return cci_data
 
 
-def save_CCIData(cci_data, path):
-    """Saves a CCIData object to disk using pickle.
-
-    Args:
-        cci_data (CCIData): The CCIData object to save.
-        path (str): The path where to save the CCIData object.
-    """
-    with open(path, 'wb') as f:
-        pickle.dump(cci_data, f)
-
-
 def read_CCIData(path) -> CCIData:
     """Loads a CCIData object from disk.
 

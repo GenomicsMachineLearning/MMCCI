@@ -536,7 +536,7 @@ def chord_plot(
 
 def dissim_hist(
     dissimilarity_scores,
-    x_label_size=24,
+    x_label_size=18,
     y_label_size=24,
     x_tick_size=14,
     y_tick_size=12,
@@ -547,7 +547,7 @@ def dissim_hist(
 
     Args:
         dissimilarity_scores (dict): A dictionary of dissimilarity scores.
-        x_label_size (int): Font size for x-axis label. Defaults to 24.
+        x_label_size (int): Font size for x-axis label. Defaults to 18.
         y_label_size (int): Font size for y-axis label. Defaults to 24.
         x_tick_size (int): Font size for ticks. Defaults to 14.
         y_tick_size (int): Font size for ticks. Defaults to 12.
@@ -577,7 +577,7 @@ def lr_top_dissimilarity(
     dissimilarity_scores,
     n=10,
     top=True,
-    x_label_size=24,
+    x_label_size=18,
     y_label_size=24,
     x_tick_size=14,
     y_tick_size=12,
@@ -591,7 +591,7 @@ def lr_top_dissimilarity(
         n (int): Number of LR pairs to plot.
         top (bool): If True, plot LR pairs with highest dissimilarity scores.
         If False, plot LR pairs with lowest dissimilarity scores.
-        x_label_size (int): Font size for x-axis label. Defaults to 24.
+        x_label_size (int): Font size for x-axis label. Defaults to 18.
         y_label_size (int): Font size for y-axis label. Defaults to 24.
         x_tick_size (int): Font size for ticks. Defaults to 14.
         y_tick_size (int): Font size for ticks. Defaults to 12.
@@ -656,7 +656,7 @@ def lr_barplot(
     sample,
     assay="raw",
     n=15,
-    x_label_size=24,
+    x_label_size=18,
     y_label_size=24,
     x_tick_size=14,
     y_tick_size=12,
@@ -671,7 +671,7 @@ def lr_barplot(
         assay (str): The assay to use. Defaults to "raw".
         n (int): Number of LR pairs to plot. If None, plot all LR pairs. Defaults to
         15.
-        x_label_size (int): Font size for x-axis label. Defaults to 24.
+        x_label_size (int): Font size for x-axis label. Defaults to 18.
         y_label_size (int): Font size for y-axis label. Defaults to 24.
         x_tick_size (int): Font size for tick labels. Defaults to 14.
         y_tick_size (int): Font size for tick labels. Defaults to 12.
@@ -720,7 +720,7 @@ def lrs_per_celltype(
     key="cci_scores",
     p_vals=None,
     n=15,
-    x_label_size=24,
+    x_label_size=18,
     y_label_size=24,
     x_tick_size=14,
     y_tick_size=12,
@@ -739,7 +739,7 @@ def lrs_per_celltype(
         key (str): The key to use. Defaults to "cci_scores".
         p_vals (dict): A dictionary of p-values. Defaults to None.
         n (int): Number of LR pairs to plot. Defaults to 15.
-        x_label_size (int): Font size for x-axis label. Defaults to 24.
+        x_label_size (int): Font size for x-axis label. Defaults to 18.
         y_label_size (int): Font size for y-axis label. Defaults to 24.
         x_tick_size (int): Font size for tick labels. Defaults to 14.
         y_tick_size (int): Font size for tick labels. Defaults to 12.
