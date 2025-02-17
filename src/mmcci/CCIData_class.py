@@ -4,6 +4,7 @@ import anndata as ad
 import pickle
 from typing import Dict, List, Optional, Union
 from copy import deepcopy
+import json
 
 
 class CCIData:
@@ -536,11 +537,48 @@ class CCIData:
         return p_vals
 
 
-    def save(self, path: str):        
-        """Saves a CCIData object to disk using pickle.
-
+    def save(self, path: str):
+        """Saves CCIData object to JSON or pkl file.
+        
         Args:
-            path (str): The path where to save the CCIData object.
+            path (str): Path to save the JSON or pkl file
         """
-        with open(path, 'wb') as f:
-            pickle.dump(self, f)
+        if not path.endswith('.json'):
+            path += '.json'
+            
+        if path.endswith('.json'):
+            with open(path, 'w') as f:
+                json.dump(self.to_dict(), f)
+                
+        if path.endswith('.pkl'):
+            with open(path, 'wb') as f:
+                pickle.dump(self, f)
+
+            
+    def to_dict(self) -> dict:
+        """Convert CCIData object to a JSON-serializable dictionary.
+        
+        Returns:
+            dict: Dictionary representation of the CCIData object
+        """
+        data_dict = {
+            'metadata': self.metadata,
+            'assays': {}
+        }
+        
+        # Convert assays
+        for assay_name, assay in self.assays.items():
+            data_dict['assays'][assay_name] = {}
+            for key, value in assay.items():
+                if key in ['cci_scores', 'p_values']:
+                    # Convert dict of DataFrames
+                    data_dict['assays'][assay_name][key] = {
+                        k: v.to_dict() for k,v in value.items()
+                    }
+                elif isinstance(value, pd.DataFrame):
+                    # Convert single DataFrame
+                    data_dict['assays'][assay_name][key] = value.to_dict()
+                else:
+                    data_dict['assays'][assay_name][key] = value
+                    
+        return data_dict

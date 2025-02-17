@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import scanpy as sc
 import pickle
+import json
 from .CCIData_class import CCIData
 
 def read_stLearn(path, key="cell_type", save_anndata=True) -> CCIData:
@@ -265,14 +266,55 @@ def read_NATMI(path, n_spots=None) -> CCIData:
     return cci_data
 
 
-def read_CCIData(path) -> CCIData:
-    """Loads a CCIData object from disk.
-
+def read_CCIData(path: str) -> CCIData:
+    """Loads a CCIData object from JSON or pickle file.
+    
     Args:
-        path (str): The path to the saved CCIData object.
-
+        path (str): Path to the saved CCIData file
+        
     Returns:
-        CCIData: The loaded CCIData object.
+        CCIData: The loaded CCIData object
     """
-    with open(path, 'rb') as f:
-        return pickle.load(f)
+    if path.endswith('.json'):
+        # Load from JSON file
+        with open(path, 'r') as f:
+            data_dict = json.load(f)
+        return from_dict(data_dict)
+    
+    elif path.endswith('.pkl'):
+        # Load from pickle file for backwards compatibility
+        with open(path, 'rb') as f:
+            return pickle.load(f)
+    else:
+        raise ValueError("File must be .json or .pkl format")
+
+
+def from_dict(data_dict: dict) -> CCIData:
+    """Create CCIData object from a dictionary.
+    
+    Args:
+        data_dict: Dictionary containing CCIData representation
+        
+    Returns:
+        CCIData: Reconstructed CCIData object
+    """
+    # Convert assays back to DataFrames
+    assays = {}
+    for assay_name, assay in data_dict['assays'].items():
+        assays[assay_name] = {}
+        for key, value in assay.items():
+            if key in ['cci_scores', 'p_values']:
+                # Convert dict of DataFrames
+                assays[assay_name][key] = {
+                    k: pd.DataFrame.from_dict(v) for k,v in value.items()
+                }
+            elif isinstance(value, dict):
+                # Convert single DataFrame
+                assays[assay_name][key] = pd.DataFrame.from_dict(value)
+            else:
+                assays[assay_name][key] = value
+
+    return CCIData(
+        other_metadata=data_dict['metadata'],
+        assays=assays
+    )
