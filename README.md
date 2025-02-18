@@ -19,7 +19,7 @@
      <b>Paper</b>
     </td>
     <td>
-      <a href="https://doi.org/10.1101/2023.05.14.540710"><img src="https://zenodo.org/badge/DOI/10.1101/2023.05.14.540710.svg"
+      <a href="https://www.biorxiv.org/content/10.1101/2024.02.28.582639v3"><img src="https://zenodo.org/badge/DOI/10.1101/2023.05.14.540710.svg"
         alt="DOI"></a>
     </td>
   </tr>

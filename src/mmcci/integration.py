@@ -21,8 +21,8 @@ def get_lr_pairs(
 
     Args:
         samples (list): A list of CCIData objects.
-        assay (str) (optional): The assay to use for identifying LR pairs. Defaults to
-        "raw".
+        assay (str) (optional): The assay or assays to use for identifying LR pairs. 
+        Defaults to "raw".
         method (str) (optional): The method to use for identifying LR pairs. Options are
         "all", ">=50%", ">50%", and "any". Defaults to ">=50%".
 
@@ -32,9 +32,17 @@ def get_lr_pairs(
 
     lr_pairs_counts = {}
     lr_pairs = []
+    assays = []
+    
+    if type(assay) == str:
+        assays = [assay for i in range(len(samples))]
+    elif len(assay) != len(samples):
+        raise ValueError("Assay list must be the same length as the samples list.")
+    else:
+        assays = assay
 
-    for sample in samples:
-        for lr_pair, matrix in sample.assays[assay]['cci_scores'].items():
+    for i in range(len(samples)):
+        for lr_pair, matrix in samples[i].assays[assays[i]]['cci_scores'].items():
             if sum(sum(matrix.values)) != 0:
                 lr_pairs_counts[lr_pair] = lr_pairs_counts.setdefault(lr_pair, 0) + 1
 
@@ -68,8 +76,8 @@ def calc_scale_factors(
     Args:
         samples (list): A list of CCIData objects.
         method (str) (optional): The method to use for calculating scale factors.
-        assay (str) (optional): The assay to use for calculating scale factors. Defaults
-        to "raw".
+        assay (str) (optional): The assay or assays to use for calculating scale 
+        factors. Defaults to "raw".
         group_key (str) (optional): The key to use for grouping samples. Defaults to
         "platform".
         
@@ -78,6 +86,14 @@ def calc_scale_factors(
     """
     
     scale_factors = {}
+    assays = []
+    
+    if type(assay) == str:
+        assays = [assay for i in range(len(samples))]
+    elif len(assay) != len(samples):
+        raise ValueError("Assay list must be the same length as the samples list.")
+    else:
+        assays = assay
     
     # get all the unique group keys
     group_keys = set([sample.metadata[group_key] for sample in samples])
@@ -91,8 +107,8 @@ def calc_scale_factors(
     for group, sample_list in group_samples.items():
         total_counts = 0
         lr_pair_count = 0
-        for sample in sample_list:    
-            for lr_pair, df in sample.assays[assay]['cci_scores'].items():
+        for i in range(len(sample_list)):
+            for lr_pair, df in sample_list[i].assays[assays[i]]['cci_scores'].items():
                 lr_pair_count += 1
                 if method == "mean":
                     total_counts += df.mean().mean()
@@ -136,8 +152,8 @@ def lr_integration(
         to False.
         strict (bool) (optional): If True, only interactions where more than 50% of the 
         values are non-zero will be multiplied. Defaults to False.
-        assay (str) (optional): The assay to use for integrating samples. Defaults to
-        "raw".
+        assay (str) (optional): The assay or assays to use for integrating samples. 
+        Defaults to "raw".
         integrate_pvals (bool) (optional): Whether to integrate p-values (if possible).
         Defaults to True.
         p_val_method (str) (optional): The method to use for combining p-values. Options
@@ -152,12 +168,21 @@ def lr_integration(
     if len(samples) == 0:
         raise ValueError("No samples provided.")
     
-    for sample in samples:
-        if sample.assays[assay] is None:
+    assays = []
+    
+    if type(assay) == str:
+        assays = [assay for i in range(len(samples))]
+    elif len(assay) != len(samples):
+        raise ValueError("Assay list must be the same length as the samples list.")
+    else:
+        assays = assay
+    
+    for i in range(len(samples)):
+        if samples[i].assays[assays[i]] is None:
             raise ValueError("Sample does not have the specified assay.")
         
         if integrate_pvals:
-            if 'p_values' not in sample.assays[assay]:
+            if 'p_values' not in samples[i].assays[assays[i]]:
                 integrate_pvals = False
                 print("No p-values found. Skipping p-value integration.")
                 
@@ -165,7 +190,7 @@ def lr_integration(
     lr_dfs = {}
 
     if len(samples) >= 2:
-        lr_pairs = sorted(get_lr_pairs(samples, assay=assay, method=method))
+        lr_pairs = sorted(get_lr_pairs(samples, assay=assays, method=method))
     else:
         raise ValueError("Integration needs at least two samples")
 
@@ -173,11 +198,11 @@ def lr_integration(
         lr = lr_pairs[i]
 
         for j in range(len(samples)):
-            if lr in samples[j].assays[assay]['cci_scores']:
+            if lr in samples[j].assays[assays[j]]['cci_scores']:
                 if lr in lr_dfs:
-                    lr_dfs[lr].append(samples[j].assays[assay]['cci_scores'][lr])
+                    lr_dfs[lr].append(samples[j].assays[assays[j]]['cci_scores'][lr])
                 else:
-                    lr_dfs[lr] = [samples[j].assays[assay]['cci_scores'][lr]]
+                    lr_dfs[lr] = [samples[j].assays[assays[j]]['cci_scores'][lr]]
 
     with tqdm(total=len(lr_pairs), desc="Integrating LR CCI scores") as pbar:
         for lr, dfs in lr_dfs.items():
@@ -216,19 +241,19 @@ def lr_integration(
         lr_dfs = {}
         
         lr_pairs = set()
-        for sample in samples:
-            lr_pairs.update(sample.assays[assay]['p_values'].keys())
+        for i in range(len(samples)):
+            lr_pairs.update(samples[i].assays[assays[j]]['p_values'].keys())
         lr_pairs = list(lr_pairs)
 
         for i in range(len(lr_pairs)):
             lr = lr_pairs[i]
 
             for j in range(len(samples)):
-                if lr in samples[j].assays[assay]['p_values']:
+                if lr in samples[j].assays[assays[j]]['p_values']:
                     if lr in lr_dfs:
-                        lr_dfs[lr].append(samples[j].assays[assay]['p_values'][lr])
+                        lr_dfs[lr].append(samples[j].assays[assays[j]]['p_values'][lr])
                     else:
-                        lr_dfs[lr] = [samples[j].assays[assay]['p_values'][lr]]
+                        lr_dfs[lr] = [samples[j].assays[assays[j]]['p_values'][lr]]
 
         with tqdm(total=len(lr_dfs), desc="Integrating p values") as pbar:
             for lr, dfs in lr_dfs.items():
@@ -266,10 +291,10 @@ def integrate_networks(
         to False.
         strict (bool) (optional): If True, only interactions where more than 50% of the 
         values are non-zero will be multiplied. Defaults to False.
-        assay (str) (optional): The assay to use for integrating samples. Defaults to
-        "raw".
-        network_key (str) (optional): The key to use for identifying the network. 
-        Defaults to "network".
+        assay (str) (optional): The assay or assays to use for integrating samples. 
+        Defaults to "raw".
+        network_key (str) (optional): The key or keys to use for identifying the 
+        network. Defaults to "network".
         integrate_pvals (bool) (optional): Whether to integrate p-values (if possible).
         Defaults to False.
         p_val_method (str) (optional): The method to use for combining p-values. Options
@@ -287,19 +312,35 @@ def integrate_networks(
     networks = []
     integrated_network = None
     integrated_p_values = None
+    assays = []
+    network_keys = []
     
-    for sample in samples:
-        if sample.assays[assay] is None:
+    if type(assay) == str:
+        assays = [assay for i in range(len(samples))]
+    elif len(assay) != len(samples):
+        raise ValueError("Assay list must be the same length as the samples list.")
+    else:
+        assays = assay
+        
+    if type(network_key) == str:
+        network_keys = [network_key for i in range(len(samples))]
+    elif len(network_key) != len(samples):
+        raise ValueError("Network key list must be the same length as the samples list.")
+    else:
+        network_keys = network_key
+    
+    for i in range(len(samples)):
+        if samples[i].assays[assays[i]] is None:
             raise ValueError("Sample does not have the specified assay.")
         
         if integrate_pvals:
             if p_val_key is None:
                 raise ValueError("No p-value key provided.")
             
-            if p_val_key not in sample.assays[assay]:
+            if p_val_key not in samples[i].assays[assays[i]]:
                 raise ValueError("Sample does not have the specified p-value key.")
             
-        networks.append(sample.assays[assay][network_key])
+        networks.append(samples[i].assays[assays[i]][network_keys[i]])
             
     if len(networks) == 2:
         if sum:
@@ -326,8 +367,8 @@ def integrate_networks(
     if integrate_pvals:
         p_values = []
         
-        for sample in samples:
-            p_values.append(sample.assays[assay][p_val_key])
+        for i in range(len(samples)):
+            p_values.append(samples[i].assays[assays[i]][p_val_key])
         
         integrated_p_values = _correct_pvals_matrix(p_values, method=p_val_method)
         

@@ -287,6 +287,25 @@ def read_CCIData(path: str) -> CCIData:
             return pickle.load(f)
     else:
         raise ValueError("File must be .json or .pkl format")
+    
+    
+def read_network(path: str, metadata: dict = None) -> CCIData:
+    """Loads a single network from a csv file.
+    
+    Args:
+        path (str): Path to the saved network file
+        metadata (dict) (optional): Dictionary containing other metadata
+        
+    Returns:
+        CCIData: The loaded CCIData object
+    """
+    if path.endswith('.csv'):
+        # Load from CSV file
+        data = pd.read_csv(path, index_col=0)
+        return CCIData(network=data, other_metadata=metadata)
+    
+    else:
+        raise ValueError("File must be .csv format")
 
 
 def from_dict(data_dict: dict) -> CCIData:
@@ -318,3 +337,4 @@ def from_dict(data_dict: dict) -> CCIData:
         other_metadata=data_dict['metadata'],
         assays=assays
     )
+    

@@ -5,6 +5,7 @@ import pickle
 from typing import Dict, List, Optional, Union
 from copy import deepcopy
 import json
+from tqdm import tqdm
 
 
 class CCIData:
@@ -66,7 +67,12 @@ class CCIData:
         
         assays = {}
         for assay in self.assays.keys():
-            assays[assay] = f"{len(self.assays[assay]['cci_scores'])} LR pairs"
+            if 'cci_scores' in self.assays[assay].keys():
+                assays[assay] = f"{len(self.assays[assay]['cci_scores'])} LR pairs"
+            elif 'network' in self.assays[assay].keys():
+                assays[assay] = "network"
+            else:
+                assays[assay] = "none"
             
         if self.adata is not None:
             return f"CCIData object with assays: {assays}, metadata: {self.metadata}, \
@@ -78,15 +84,7 @@ class CCIData:
     def __str__(self):
         """Print assays (with number of LR pairs) and metadata"""
         
-        assays = {}
-        for assay in self.assays.keys():
-            assays[assay] = f"{len(self.assays[assay]['cci_scores'])} LR pairs"
-            
-        if self.adata is not None:
-            return f"CCIData object with assays: {assays}, metadata: {self.metadata}, \
-                and AnnData object"
-            
-        return f"CCIData object with assays: {assays} and metadata: {self.metadata}"
+        return self.__repr__()
         
         
     def get_sample_metadata(self, sample_id: str) -> Dict:
@@ -163,8 +161,13 @@ class CCIData:
         """
         cell_types = []
         
-        for dfs in self.assays[assay]['cci_scores'].values():
-            cell_types.extend(dfs.index)
+        if 'cci_scores' in self.assays[assay].keys():
+            for dfs in self.assays[assay]['cci_scores'].values():
+                cell_types.extend(dfs.index)
+        elif 'network' in self.assays[assay].keys():
+            cell_types.extend(self.assays[assay]['network'].index)
+        else:
+            raise ValueError("No cell types found in sample.")
             
         return list(set(cell_types))
     
@@ -203,7 +206,7 @@ class CCIData:
         
         if assay is not None:
             for key in renamed_cci_data.assays[assay].keys():
-                if key == 'network':
+                if key == 'network' or key == 'overall':
                     renamed_cci_data.assays[assay][key].rename(
                         index=replacements,
                         columns=replacements,
@@ -219,7 +222,7 @@ class CCIData:
         else:
             for assay in renamed_cci_data.assays.keys():
                 for key in renamed_cci_data.assays[assay].keys():
-                    if key == 'network':
+                    if key == 'network' or key == 'overall':
                         renamed_cci_data.assays[assay][key].rename(
                             index=replacements,
                             columns=replacements,
@@ -233,6 +236,73 @@ class CCIData:
                             inplace=True)
 
         return renamed_cci_data
+    
+    
+    def merge_cell_types(self,
+                         cell_types: List[str],
+                         new_cell_type: str,
+                         assay = None) -> 'CCIData':
+        """Merges cell types in a CCIData.
+        
+        Args:
+            cell_types (list): A list of cell types to merge.
+            new_cell_type (str): The name of the new cell type after merging.
+            assay (str): The assay to merge the cell types in. If None, all assays are
+                merged.
+                
+        Returns:
+            CCIData: A new CCIData object with the cell types merged.
+        """
+        merged_cci_data = self.copy()
+        assays = merged_cci_data.assays.keys()
+        
+        if assay is not None:
+            assays = [assay]
+            
+        for assay in assays:
+            for key in merged_cci_data.assays[assay].keys():
+                if key == 'network' or key == 'overall':
+                    df = merged_cci_data.assays[assay][key]
+                    # Sum the rows
+                    row_sums = df.loc[cell_types].sum()
+                    # Sum the columns 
+                    col_sums = df[cell_types].sum()
+                    # Drop original cell types
+                    df = df.drop(cell_types, axis=0)
+                    df = df.drop(cell_types, axis=1) 
+                    # Add new merged cell type
+                    df.loc[new_cell_type] = row_sums
+                    df[new_cell_type] = col_sums
+                    merged_cci_data.assays[assay][key] = df
+                elif key == 'cci_scores':
+                    for lr_pair in merged_cci_data.assays[assay][key].keys():
+                        df = merged_cci_data.assays[assay][key][lr_pair]
+                        # Sum the rows
+                        row_sums = df.loc[cell_types].sum()
+                        # Sum the columns
+                        col_sums = df[cell_types].sum()
+                        # Drop original cell types
+                        df = df.drop(cell_types, axis=0)
+                        df = df.drop(cell_types, axis=1)
+                        # Add new merged cell type
+                        df.loc[new_cell_type] = row_sums
+                        df[new_cell_type] = col_sums
+                        merged_cci_data.assays[assay][key][lr_pair] = df
+                elif key == 'p_values':
+                    for lr_pair in merged_cci_data.assays[assay][key].keys():
+                        df = merged_cci_data.assays[assay][key][lr_pair]
+                        # Sum the rows
+                        row_min = df.loc[cell_types].min()
+                        # Sum the columns
+                        col_min = df[cell_types].min()
+                        # Drop original cell types
+                        df = df.drop(cell_types, axis=0)
+                        df = df.drop(cell_types, axis=1)
+                        # Add new merged cell type
+                        df.loc[new_cell_type] = row_min
+                        df[new_cell_type] = col_min
+        
+        return merged_cci_data
     
     
     def subset_lrs(self,
@@ -379,7 +449,7 @@ class CCIData:
         total = total / total.sum().sum()
         total = total.fillna(0)
 
-        overall_cci_data.assays[assay]['overall'] = total
+        overall_cci_data.assays[assay][name] = total
         
         return overall_cci_data
     
@@ -582,3 +652,78 @@ class CCIData:
                     data_dict['assays'][assay_name][key] = value
                     
         return data_dict
+
+
+    def create_pathway_assay(
+        self,
+        assay: str = "raw",
+        gsea_results: pd.DataFrame = None,
+        strict: bool = True,
+        cutoff: float = 0.05,
+        assay_name = "pathway"
+        ) -> 'CCIData':
+        """Creates a pathway assay from GSEA results.
+        
+        Args:
+            assay (str): The assay to use. Defaults to 'raw'.
+            gsea_results (pd.DataFrame): GSEA results. Defaults to None.
+            strict (bool): If True, both ligand and receptor must be in the gene list.
+                If False, only one must be in the gene list. Defaults to True.
+            cutoff (float): The p-value cutoff to filter the GSEA results by. Defaults
+                to 0.05.
+            assay_name (str): The name of the new assay. Defaults to 'pathway'.
+            
+        Returns:
+            CCIData: A new CCIData object with the pathway assay.
+        """
+        
+        copy = self.copy()
+        grouped_cci_scores = {}
+
+        with tqdm(total=len(gsea_results), desc="Converting to pathways") as pbar:
+            for term in gsea_results['Term']:
+                
+                filtered_df = gsea_results[gsea_results['Term'] == term]
+                if filtered_df['Adjusted P-value'].values[0] > cutoff:
+                    tqdm.update(pbar, 1)
+                    continue
+                
+                gene_list = filtered_df['Genes'].tolist()
+                genes = []
+                for gene in gene_list:
+                    genes.extend(gene.lower().split(";"))
+                    
+                cci_scores = []
+                        
+                for key in self.assays[assay]['cci_scores'].keys():
+                    lig, rec = key.lower().split("_")
+                    if strict:
+                        if lig in genes and rec in genes:
+                            cci_scores.append(self.assays[assay]['cci_scores'][key])
+                    else:
+                        if lig in genes or rec in genes:
+                            cci_scores.append(self.assays[assay]['cci_scores'][key])
+                            
+                total = None      
+                for df in cci_scores:
+                    if df.sum().sum() > 0:
+                        if total is not None:
+                            total = total + df
+                            total = total.fillna(0)
+                        else:
+                            total = df
+                            total = total.fillna(0)
+                            
+                if total is None:
+                    tqdm.update(pbar, 1)
+                    continue
+                
+                total = total / total.sum().sum()
+                total = total.fillna(0)
+
+                grouped_cci_scores[term] = total
+                tqdm.update(pbar, 1)
+                        
+        copy.assays[assay_name] = {'cci_scores': grouped_cci_scores}
+        
+        return copy
