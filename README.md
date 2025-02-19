@@ -77,10 +77,6 @@ MMCCI provides multiple useful analyses that can be run on the integrated networ
 4. Sender-receiver LR querying
 5. GSEA pathway analysis
 
-### Pipeline Diagram
-
-![MMCCI Pipeline](docs/images/pipeline.png)
-
 ## Citing MMCCI
 
 If you have used MMCCI in your research, please consider citing us: 
