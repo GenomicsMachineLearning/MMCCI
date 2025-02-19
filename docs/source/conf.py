@@ -23,7 +23,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
-    'myst_nb'  # Remove 'myst_parser' because myst_nb already includes it!
+    'nbsphinx',
 ]
 
 templates_path = ['_templates']

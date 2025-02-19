@@ -11,7 +11,6 @@ provides an overview, installation guidelines, API reference, and usage examples
    getting_started
    modules
    usage
-   examples   # reference the new examples page here
 
 Indices and tables
 ==================

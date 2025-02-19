@@ -6,6 +6,6 @@ Below are some example notebooks demonstrating MMCCI usage.
 .. toctree::
    :maxdepth: 2
 
-   ../../examples/brain_aging_example.ipynb
-   ../../examples/melanoma_example.ipynb
-   ../../loading_CCI_results.ipynb
+   notebook:: ../../examples/brain_aging_example.ipynb
+   notebook:: ../../examples/melanoma_example.ipynb
+   notebook:: ../../loading_CCI_results.ipynb
