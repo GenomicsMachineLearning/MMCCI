@@ -46,7 +46,7 @@ Requires-Dist: anndata<=0.10.8
      <b>Paper</b>
     </td>
     <td>
-      <a href="https://doi.org/10.1101/2023.05.14.540710"><img src="https://zenodo.org/badge/DOI/10.1101/2023.05.14.540710.svg"
+      <a href="https://www.biorxiv.org/content/10.1101/2024.02.28.582639v3"><img src="https://zenodo.org/badge/DOI/10.1101/2023.05.14.540710.svg"
         alt="DOI"></a>
     </td>
   </tr>
@@ -103,10 +103,6 @@ MMCCI provides multiple useful analyses that can be run on the integrated networ
 3. Clustering of spots/cells with similar interaction scores
 4. Sender-receiver LR querying
 5. GSEA pathway analysis
-
-### Pipeline Diagram
-
-![MMCCI Pipeline](docs/images/pipeline.png)
 
 ## Citing MMCCI
 
