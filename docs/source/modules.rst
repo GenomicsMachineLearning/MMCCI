@@ -1,9 +1,3 @@
-MMCCI
-=====
-
-.. toctree::
-   :maxdepth: 4
-
 API Reference
 =============
 

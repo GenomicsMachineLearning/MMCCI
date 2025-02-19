@@ -10,7 +10,7 @@ provides an overview, installation guidelines, API reference, and usage examples
 
    getting_started
    modules
-   usage
+   examples
 
 Indices and tables
 ==================

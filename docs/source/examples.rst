@@ -1,4 +1,4 @@
-Examples
+Tutorials and Examples
 ========
 
 Below are some example notebooks demonstrating MMCCI usage.
