@@ -11,7 +11,7 @@ import sys
 sys.path.insert(0, os.path.abspath('../../'))
 
 project = 'MMCCI'
-copyright = '2025, Levi Hockey'
+copyright = '2025, Genomics and Machine Learning Lab'
 author = 'Levi Hockey'
 release = '1.0.0'
 
