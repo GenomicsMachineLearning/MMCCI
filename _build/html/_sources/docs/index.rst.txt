@@ -5,13 +5,6 @@ Welcome to MMCCI's Documentation
    :maxdepth: 2
 
    modules
-   ccidata
-   integration
-   tools
-   scoring
-   plotting
-   analysis
-   io
 
 Indices and tables
 ==================
