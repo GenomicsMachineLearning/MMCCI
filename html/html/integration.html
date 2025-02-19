@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Integration &mdash; MMCCI  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tools" href="tools.html" />
+    <link rel="prev" title="CCIData" href="ccidata.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MMCCI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="ccidata.html">CCIData</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Integration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#mmcci.integration.calc_scale_factors"><code class="docutils literal notranslate"><span class="pre">calc_scale_factors()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mmcci.integration.get_lr_pairs"><code class="docutils literal notranslate"><span class="pre">get_lr_pairs()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mmcci.integration.integrate_networks"><code class="docutils literal notranslate"><span class="pre">integrate_networks()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mmcci.integration.lr_integration"><code class="docutils literal notranslate"><span class="pre">lr_integration()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scoring.html">Scoring</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plotting.html">Plotting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="io.html">IO</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MMCCI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Integration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/integration.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mmcci.integration">
+<span id="integration"></span><h1>Integration<a class="headerlink" href="#module-mmcci.integration" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="mmcci.integration.calc_scale_factors">
+<span class="sig-prename descclassname"><span class="pre">mmcci.integration.</span></span><span class="sig-name descname"><span class="pre">calc_scale_factors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'raw'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'platform'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/mmcci/integration.html#calc_scale_factors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mmcci.integration.calc_scale_factors" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates the scale factors for normalizing matrices between different
+platforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>samples</strong> (<em>list</em>) – A list of CCIData objects.</p></li>
+<li><p><strong>method</strong> (<em>str</em><em>) </em><em>(</em><em>optional</em>) – The method to use for calculating scale factors.</p></li>
+<li><p><strong>assay</strong> (<em>str</em><em>) </em><em>(</em><em>optional</em>) – The assay or assays to use for calculating scale</p></li>
+<li><p><strong>&quot;raw&quot;.</strong> (<em>factors. Defaults to</em>) – </p></li>
+<li><p><strong>group_key</strong> (<em>str</em><em>) </em><em>(</em><em>optional</em>) – The key to use for grouping samples. Defaults to</p></li>
+<li><p><strong>&quot;platform&quot;.</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary where keys are LR pairs and values are the scale factors.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mmcci.integration.get_lr_pairs">
+<span class="sig-prename descclassname"><span class="pre">mmcci.integration.</span></span><span class="sig-name descname"><span class="pre">get_lr_pairs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'raw'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&gt;=50%'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="_modules/mmcci/integration.html#get_lr_pairs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mmcci.integration.get_lr_pairs" title="Permalink to this definition"></a></dt>
+<dd><p>Identifies the LR pairs present in a list of samples according to the given
+method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>samples</strong> (<em>list</em>) – A list of CCIData objects.</p></li>
+<li><p><strong>assay</strong> (<em>str</em><em>) </em><em>(</em><em>optional</em>) – The assay or assays to use for identifying LR pairs.</p></li>
+<li><p><strong>&quot;raw&quot;.</strong> (<em>Defaults to</em>) – </p></li>
+<li><p><strong>method</strong> (<em>str</em><em>) </em><em>(</em><em>optional</em>) – The method to use for identifying LR pairs. Options are</p></li>
+<li><p><strong>&quot;all&quot;</strong> – </p></li>
+<li><p><strong>&quot;&gt;=50%&quot;</strong> – </p></li>
+<li><p><strong>&quot;&gt;50%&quot;</strong> – </p></li>
+<li><p><strong>&quot;&gt;=50%&quot;.</strong> (<em>and &quot;any&quot;. Defaults to</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of LR pairs that are present in a majority of samples</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mmcci.integration.integrate_networks">
+<span class="sig-prename descclassname"><span class="pre">mmcci.integration.</span></span><span class="sig-name descname"><span class="pre">integrate_networks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'raw'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">network_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'network'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrate_pvals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_val_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'stouffer'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_val_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'network_p_values'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="ccidata.html#mmcci.CCIData_class.CCIData" title="mmcci.CCIData_class.CCIData"><span class="pre">CCIData</span></a></span></span><a class="reference internal" href="_modules/mmcci/integration.html#integrate_networks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mmcci.integration.integrate_networks" title="Permalink to this definition"></a></dt>
+<dd><p>Integrates a list of samples that are single networks into a single network.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>samples</strong> (<em>list</em>) – A list of CCIData objects.</p></li>
+<li><p><strong>sum</strong> (<em>bool</em><em>) </em><em>(</em><em>optional</em>) – Whether to sum instead of multiply the matrices. Defaults</p></li>
+<li><p><strong>False.</strong> (<em>Defaults to</em>) – </p></li>
+<li><p><strong>strict</strong> (<em>bool</em><em>) </em><em>(</em><em>optional</em>) – If True, only interactions where more than 50% of the</p></li>
+<li><p><strong>False.</strong> – </p></li>
+<li><p><strong>assay</strong> (<em>str</em><em>) </em><em>(</em><em>optional</em>) – The assay or assays to use for integrating samples.</p></li>
+<li><p><strong>&quot;raw&quot;.</strong> (<em>Defaults to</em>) – </p></li>
+<li><p><strong>network_key</strong> (<em>str</em><em>) </em><em>(</em><em>optional</em>) – The key or keys to use for identifying the</p></li>
+<li><p><strong>&quot;network&quot;.</strong> (<em>network. Defaults to</em>) – </p></li>
+<li><p><strong>integrate_pvals</strong> (<em>bool</em><em>) </em><em>(</em><em>optional</em>) – Whether to integrate p-values (if possible).</p></li>
+<li><p><strong>False.</strong> – </p></li>
+<li><p><strong>p_val_method</strong> (<em>str</em><em>) </em><em>(</em><em>optional</em>) – The method to use for combining p-values. Options</p></li>
+<li><p><strong>&quot;stouffer&quot;.</strong> (<em>are &quot;stouffer&quot; and &quot;fisher&quot;. Defaults to</em>) – </p></li>
+<li><p><strong>p_val_key</strong> (<em>str</em><em>) </em><em>(</em><em>optional</em>) – The key to use for identifying p-values. Defaults to</p></li>
+<li><p><strong>&quot;network_p_values&quot;.</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The integrated sample.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="ccidata.html#mmcci.CCIData_class.CCIData" title="mmcci.CCIData_class.CCIData">CCIData</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mmcci.integration.lr_integration">
+<span class="sig-prename descclassname"><span class="pre">mmcci.integration.</span></span><span class="sig-name descname"><span class="pre">lr_integration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&gt;=50%'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'raw'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrate_pvals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p_val_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'stouffer'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="ccidata.html#mmcci.CCIData_class.CCIData" title="mmcci.CCIData_class.CCIData"><span class="pre">CCIData</span></a></span></span><a class="reference internal" href="_modules/mmcci/integration.html#lr_integration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mmcci.integration.lr_integration" title="Permalink to this definition"></a></dt>
+<dd><p>Integrates a list of samples into a single sample per lr pair.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>samples</strong> (<em>list</em>) – A list of CCIData objects.</p></li>
+<li><p><strong>method</strong> (<em>str</em><em>) </em><em>(</em><em>optional</em>) – The method to use for identifying LR pairs. Options are</p></li>
+<li><p><strong>&quot;all&quot;</strong> – </p></li>
+<li><p><strong>&quot;&gt;=50%&quot;</strong> – </p></li>
+<li><p><strong>&quot;&gt;50%&quot;</strong> – </p></li>
+<li><p><strong>&quot;&gt;=50%&quot;.</strong> (<em>and &quot;any&quot;. Defaults to</em>) – </p></li>
+<li><p><strong>sum</strong> (<em>bool</em><em>) </em><em>(</em><em>optional</em>) – Whether to sum instead of multiply the matrices. Defaults</p></li>
+<li><p><strong>False.</strong> (<em>values are non-zero will be multiplied. Defaults to</em>) – </p></li>
+<li><p><strong>strict</strong> (<em>bool</em><em>) </em><em>(</em><em>optional</em>) – If True, only interactions where more than 50% of the</p></li>
+<li><p><strong>False.</strong> – </p></li>
+<li><p><strong>assay</strong> (<em>str</em><em>) </em><em>(</em><em>optional</em>) – The assay or assays to use for integrating samples.</p></li>
+<li><p><strong>&quot;raw&quot;.</strong> (<em>Defaults to</em>) – </p></li>
+<li><p><strong>integrate_pvals</strong> (<em>bool</em><em>) </em><em>(</em><em>optional</em>) – Whether to integrate p-values (if possible).</p></li>
+<li><p><strong>True.</strong> (<em>Defaults to</em>) – </p></li>
+<li><p><strong>p_val_method</strong> (<em>str</em><em>) </em><em>(</em><em>optional</em>) – The method to use for combining p-values. Options</p></li>
+<li><p><strong>&quot;stouffer&quot;.</strong> (<em>are &quot;stouffer&quot; and &quot;fisher&quot;. Defaults to</em>) – </p></li>
+<li><p><strong>metadata</strong> (<em>dict</em><em>) </em><em>(</em><em>optional</em>) – Additional metadata to include in the integrated</p></li>
+<li><p><strong>None.</strong> (<em>sample. Defaults to</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The integrated sample.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="ccidata.html#mmcci.CCIData_class.CCIData" title="mmcci.CCIData_class.CCIData">CCIData</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ccidata.html" class="btn btn-neutral float-left" title="CCIData" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tools.html" class="btn btn-neutral float-right" title="Tools" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
