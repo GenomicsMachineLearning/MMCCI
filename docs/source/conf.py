@@ -26,8 +26,11 @@ extensions = [
     'nbsphinx',
 ]
 
+autoapi_dirs = ['../../src']
+
+autodoc_typehints = 'description'
 templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['*/build', 'Thumbs.db', '.DS_Store', '*/__init__.py', '*.ipynb']
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
