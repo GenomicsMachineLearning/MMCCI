@@ -36,8 +36,9 @@ exclude_patterns = [
     '*/_build', 
     'Thumbs.db', 
     '.DS_Store', 
-    '**__init__.py', 
-    '**.ipynb_checkpoints'
+    # '**__init__.py', 
+    '**.ipynb_checkpoints',
+    '**manuscript_code**'
     ]
 
 nb_execution_mode = "off"

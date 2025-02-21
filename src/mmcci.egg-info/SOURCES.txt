@@ -17,8 +17,3 @@ src/mmcci.egg-info/SOURCES.txt
 src/mmcci.egg-info/dependency_links.txt
 src/mmcci.egg-info/requires.txt
 src/mmcci.egg-info/top_level.txt
-src/mmcci.egg-info/.ipynb_checkpoints/PKG-INFO-checkpoint
-src/mmcci.egg-info/.ipynb_checkpoints/SOURCES-checkpoint.txt
-src/mmcci.egg-info/.ipynb_checkpoints/dependency_links-checkpoint.txt
-src/mmcci.egg-info/.ipynb_checkpoints/requires-checkpoint.txt
-src/mmcci.egg-info/.ipynb_checkpoints/top_level-checkpoint.txt

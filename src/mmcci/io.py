@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import scanpy as sc
+import scanpy
 import pickle
 import json
 from .CCIData_class import CCIData
@@ -17,7 +17,7 @@ def read_stLearn(path, key="cell_type", save_anndata=True) -> CCIData:
         CCIData: The CCIData object.
     """
 
-    adata = sc.read_h5ad(path)
+    adata = scanpy.read_h5ad(path)
 
     if save_anndata:
         cci_data = CCIData(

@@ -6,8 +6,7 @@ import copy
 from scipy import stats
 from tqdm import tqdm
 
-from . import sc
-from . import tl
+from . import sc, tl
 from .CCIData_class import CCIData
 
 
