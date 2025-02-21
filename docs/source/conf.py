@@ -23,15 +23,25 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
-    'nbsphinx',
+    'sphinx.ext.autosummary',
+    # 'nbsphinx',
+    'myst_nb'
 ]
-
-autoapi_dirs = ['../../src']
 
 autodoc_typehints = 'description'
 templates_path = ['_templates']
-exclude_patterns = ['*/build', 'Thumbs.db', '.DS_Store', '*/__init__.py', '*.ipynb']
+exclude_patterns = [
+    '*/build', 
+    'Thumbs.db', 
+    '.DS_Store', 
+    '*/__init__.py', 
+    '**.ipynb_checkpoints'
+    ]
 
+nb_execution_mode = "off"
+autodoc_member_order = "groupwise"
+autodoc_typehints = "signature"
+autodoc_docstring_signature = True
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "/")

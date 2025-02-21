@@ -1,6 +1,6 @@
 ﻿mmcci.it.integrate\_networks
 ============================
 
-.. currentmodule:: mmcci
+.. currentmodule:: mmcci.it
 
-.. autofunction:: it.integrate_networks
+.. autofunction:: integrate_networks

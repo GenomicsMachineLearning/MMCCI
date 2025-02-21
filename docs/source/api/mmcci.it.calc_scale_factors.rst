@@ -1,6 +1,6 @@
 ﻿mmcci.it.calc\_scale\_factors
 =============================
 
-.. currentmodule:: mmcci
+.. currentmodule:: mmcci.it
 
-.. autofunction:: it.calc_scale_factors
+.. autofunction:: calc_scale_factors

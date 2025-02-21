@@ -1,6 +1,6 @@
 ﻿mmcci.an.get\_network\_diff
 ===========================
 
-.. currentmodule:: mmcci
+.. currentmodule:: mmcci.an
 
-.. autofunction:: an.get_network_diff
+.. autofunction:: get_network_diff

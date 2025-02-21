@@ -3,8 +3,7 @@ import numpy as np
 from typing import Dict, List, Optional, Union
 
 def align_dataframes(m1, m2, fill_value=0):
-    """Aligns two DataFrames by matching their indices and columns, filling missing
-    values with 0.
+    """Aligns two DataFrames by matching their indices and columns, filling missing values with 0.
 
     Args:
         m1, m2 (pd.DataFrame): The DataFrames to align.

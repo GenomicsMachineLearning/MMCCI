@@ -6,8 +6,8 @@ import copy
 from scipy import stats
 from tqdm import tqdm
 
-from . import scoring as sc
-from . import tools as tl
+from . import sc
+from . import tl
 from .CCIData_class import CCIData
 
 
@@ -16,15 +16,12 @@ def get_lr_pairs(
     assay = "raw",
     method = ">=50%"
     ) -> list:
-    """Identifies the LR pairs present in a list of samples according to the given
-    method.
+    """Identifies the LR pairs present in a list of samples according to the given method.
 
     Args:
         samples (list): A list of CCIData objects.
-        assay (str) (optional): The assay or assays to use for identifying LR pairs. 
-        Defaults to "raw".
-        method (str) (optional): The method to use for identifying LR pairs. Options are
-        "all", ">=50%", ">50%", and "any". Defaults to ">=50%".
+        assay (str) (optional): The assay or assays to use for identifying LR pairs. Defaults to "raw".
+        method (str) (optional): The method to use for identifying LR pairs. Options are "all", ">=50%", ">50%", and "any". Defaults to ">=50%".
 
     Returns:
         list: A list of LR pairs that are present in a majority of samples
@@ -70,16 +67,13 @@ def calc_scale_factors(
     assay="raw", 
     group_key="platform"
     ) -> dict:
-    """Calculates the scale factors for normalizing matrices between different 
-    platforms.
+    """Calculates the scale factors for normalizing matrices between different platforms.
     
     Args:
         samples (list): A list of CCIData objects.
         method (str) (optional): The method to use for calculating scale factors.
-        assay (str) (optional): The assay or assays to use for calculating scale 
-        factors. Defaults to "raw".
-        group_key (str) (optional): The key to use for grouping samples. Defaults to
-        "platform".
+        assay (str) (optional): The assay or assays to use for calculating scale factors. Defaults to "raw".
+        group_key (str) (optional): The key to use for grouping samples. Defaults to "platform".
         
     Returns:
         dict: A dictionary where keys are LR pairs and values are the scale factors.
@@ -146,20 +140,13 @@ def lr_integration(
     
     Args:
         samples (list): A list of CCIData objects.
-        method (str) (optional): The method to use for identifying LR pairs. Options are
-        "all", ">=50%", ">50%", and "any". Defaults to ">=50%".
-        sum (bool) (optional): Whether to sum instead of multiply the matrices. Defaults
-        to False.
-        strict (bool) (optional): If True, only interactions where more than 50% of the 
-        values are non-zero will be multiplied. Defaults to False.
-        assay (str) (optional): The assay or assays to use for integrating samples. 
-        Defaults to "raw".
-        integrate_pvals (bool) (optional): Whether to integrate p-values (if possible).
-        Defaults to True.
-        p_val_method (str) (optional): The method to use for combining p-values. Options
-        are "stouffer" and "fisher". Defaults to "stouffer".
-        metadata (dict) (optional): Additional metadata to include in the integrated
-        sample. Defaults to None.
+        method (str) (optional): The method to use for identifying LR pairs. Options are "all", ">=50%", ">50%", and "any". Defaults to ">=50%".
+        sum (bool) (optional): Whether to sum instead of multiply the matrices. Defaults to False.
+        strict (bool) (optional): If True, only interactions where more than 50% of the values are non-zero will be multiplied. Defaults to False.
+        assay (str) (optional): The assay or assays to use for integrating samples. Defaults to "raw".
+        integrate_pvals (bool) (optional): Whether to integrate p-values (if possible). Defaults to True.
+        p_val_method (str) (optional): The method to use for combining p-values. Options are "stouffer" and "fisher". Defaults to "stouffer".
+        metadata (dict) (optional): Additional metadata to include in the integrated sample. Defaults to None.
         
     Returns:
         CCIData: The integrated sample.
@@ -287,20 +274,13 @@ def integrate_networks(
     
     Args:
         samples (list): A list of CCIData objects.
-        sum (bool) (optional): Whether to sum instead of multiply the matrices. Defaults
-        to False.
-        strict (bool) (optional): If True, only interactions where more than 50% of the 
-        values are non-zero will be multiplied. Defaults to False.
-        assay (str) (optional): The assay or assays to use for integrating samples. 
-        Defaults to "raw".
-        network_key (str) (optional): The key or keys to use for identifying the 
-        network. Defaults to "network".
-        integrate_pvals (bool) (optional): Whether to integrate p-values (if possible).
-        Defaults to False.
-        p_val_method (str) (optional): The method to use for combining p-values. Options
-        are "stouffer" and "fisher". Defaults to "stouffer".
-        p_val_key (str) (optional): The key to use for identifying p-values. Defaults to
-        "network_p_values".
+        sum (bool) (optional): Whether to sum instead of multiply the matrices. Defaults to False.
+        strict (bool) (optional): If True, only interactions where more than 50% of the  values are non-zero will be multiplied. Defaults to False.
+        assay (str) (optional): The assay or assays to use for integrating samples.  Defaults to "raw".
+        network_key (str) (optional): The key or keys to use for identifying the  network. Defaults to "network".
+        integrate_pvals (bool) (optional): Whether to integrate p-values (if possible). Defaults to False.
+        p_val_method (str) (optional): The method to use for combining p-values. Options are "stouffer" and "fisher". Defaults to "stouffer".
+        p_val_key (str) (optional): The key to use for identifying p-values. Defaults to "network_p_values".
         
     Returns:
         CCIData: The integrated sample.

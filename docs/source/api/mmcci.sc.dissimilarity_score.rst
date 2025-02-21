@@ -1,6 +1,6 @@
 ﻿mmcci.sc.dissimilarity\_score
 =============================
 
-.. currentmodule:: mmcci
+.. currentmodule:: mmcci.sc
 
-.. autofunction:: sc.dissimilarity_score
+.. autofunction:: dissimilarity_score

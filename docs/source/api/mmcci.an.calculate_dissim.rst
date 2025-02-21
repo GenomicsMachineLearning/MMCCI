@@ -1,6 +1,6 @@
 ﻿mmcci.an.calculate\_dissim
 ==========================
 
-.. currentmodule:: mmcci
+.. currentmodule:: mmcci.an
 
-.. autofunction:: an.calculate_dissim
+.. autofunction:: calculate_dissim

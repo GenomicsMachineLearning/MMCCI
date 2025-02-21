@@ -1,6 +1,6 @@
 ﻿mmcci.sc.multiply\_non\_zero\_values
 ====================================
 
-.. currentmodule:: mmcci
+.. currentmodule:: mmcci.sc
 
-.. autofunction:: sc.multiply_non_zero_values
+.. autofunction:: multiply_non_zero_values

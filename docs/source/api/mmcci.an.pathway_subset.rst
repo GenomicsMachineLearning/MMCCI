@@ -1,6 +1,6 @@
 ﻿mmcci.an.pathway\_subset
 ========================
 
-.. currentmodule:: mmcci
+.. currentmodule:: mmcci.an
 
-.. autofunction:: an.pathway_subset
+.. autofunction:: pathway_subset

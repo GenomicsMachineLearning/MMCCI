@@ -2,13 +2,12 @@ import pandas as pd
 import numpy as np
 import networkx as nx
 import scipy as sp
-import scanpy as sc
+import scanpy
 import gseapy as gp
 import seaborn as sns
 import statistics
 import subprocess
 import umap
-import matplotlib.pyplot as plt
 import importlib.resources
 import anndata as ad
 
@@ -26,10 +25,7 @@ from sklearn import preprocessing as pp
 from sklearn.decomposition import PCA
 from warnings import simplefilter
 
-from . import scoring as sco
-from . import plotting as pl
-from . import integration as it
-from . import tools as tl
+from . import sc, pl, tl
 from .CCIData_class import CCIData
 
 simplefilter("ignore", Warning)
@@ -47,14 +43,11 @@ def calculate_dissim(
     Args:
         sample1, sample2 (CCIData): The two samples to compare.
         assay (str) (optional): The assay to use for the comparison. Defaults to 'raw'.
-        key (str) (optional): The key to use for the comparison. Defaults to 
-        'cci_scores'.
-        lmbda (float) (optional): The weighting factor for the comparison. Defaults to 
-        0.5.
+        key (str) (optional): The key to use for the comparison. Defaults to  'cci_scores'.
+        lmbda (float) (optional): The weighting factor for the comparison. Defaults to 0.5.
 
     Returns:
-        dict: A dictionary where keys are common LR pairs and values are the
-        dissimilarity scores.
+        dict: A dictionary where keys are common LR pairs and values are the dissimilarity scores.
     """
     
     if assay not in sample1.assays:
@@ -72,7 +65,7 @@ def calculate_dissim(
     for lr_pair in set(sample1.assays[assay][key].keys()).intersection(
         set(sample2.assays[assay][key].keys())
     ):
-        dissims[lr_pair] = sco.dissimilarity_score(
+        dissims[lr_pair] = sc.dissimilarity_score(
             sample1.assays[assay][key][lr_pair],
             sample2.assays[assay][key][lr_pair],
             lmbda=lmbda
@@ -87,14 +80,13 @@ def get_network_diff(
     perm_test: bool = True,
     num_perms: int = 100000
     ):
-    """Calculates the difference between two networks. If perm_test is True, also
-    performs permutation testing to assess the significance of the differences.
+    """Calculates the difference between two networks. If perm_test is True, also performs permutation testing to assess the significance of the differences.
 
     Args:
         network1, network2 (pd.DataFrame): Two matrices to compare (as DataFrames).
 
     Returns:
-        dict: A
+        dict: A dictionary containing the difference between the two networks and p-values if perm_test is True.
     """
 
     dfs = tl.align_dataframes(network1, network2)
@@ -192,7 +184,7 @@ def cell_network_clustering(
         with tqdm(total=len(multi_interaction_pairs), desc="Processing") as pbar:
             for pair1, matrix1 in multi_interaction_pairs.items():
                 for pair2, matrix2 in multi_interaction_pairs.items():
-                    dissim_score = sco.dissimilarity_score(
+                    dissim_score = sc.dissimilarity_score(
                         matrix1, matrix2, lmbda=0.5, only_non_zero=True
                     )
                     multi_dissimilarity_matrix.loc[pair1, pair2] = dissim_score
@@ -213,7 +205,7 @@ def cell_network_clustering(
         with tqdm(total=len(single_interaction_pairs), desc="Processing") as pbar:
             for key1, df1 in single_interaction_pairs.items():
                 for key2, df2 in single_interaction_pairs.items():
-                    result = sco.dissimilarity_score(
+                    result = sc.dissimilarity_score(
                         df1, df2, lmbda=0.5, only_non_zero=True
                     )
                     
@@ -284,8 +276,7 @@ def _lr_cluster_helper(result_df, sample, n_clusters=0, method="KMeans"):
     Args:
         result_df (pd.DataFrame): A DataFrame containing dissimilarity scores for LRs
         sample (dict): A dictionary containing LR matrices.
-        n_clusters (int) (optional): The desired number of clusters. If 0, the optimal
-        number is determined using silhouette analysis. Defaults to 0.
+        n_clusters (int) (optional): The desired number of clusters. If 0, the optimal number is determined using silhouette analysis. Defaults to 0.
         method (str) (optional): The clustering method to use. Defaults to 'KMeans'.
 
     Returns:
@@ -340,7 +331,7 @@ def _lr_cluster_helper(result_df, sample, n_clusters=0, method="KMeans"):
                 cluster_labels = clusterer.fit_predict(pc_com_dist_matrix)
                 silhouette_avg = silhouette_score(pc_com_dist_matrix, cluster_labels)
                 silhouette_scores.append(silhouette_avg)
-            plt.silhouette_scores_plot(silhouette_scores)
+            pl.silhouette_scores_plot(silhouette_scores)
             # Perform hierarchical clustering
             model = AgglomerativeClustering(
                 # Add 2 to account for starting with k=2
@@ -402,30 +393,22 @@ def lr_interaction_clustering(
     return_adata=False,
     **kwargs
     ):
-    """Clustering of spatial LR interaction scores on AnnData objects processed through
-    stLearn.
+    """Clustering of spatial LR interaction scores on AnnData objects processed through stLearn.
 
     Args:
-    sample (AnnData): An AnnData object that has been run through stLearn.
-    resolution (float) (optional): The resolution to use for the clustering. Defaults to
-    0.5.
-    cluster_palette (str) (optional): Name of matplotlib colormap to use for clusters.
-        Defaults to 'Dark2_r'.
-    cell_type_palette (str) (optional): Name of matplotlib colormap to use for cell types.
-        Defaults to 'tab20'.
-    cell_colors (dict) (optional): Dictionary mapping cell types to colors. If not provided,
-        colors will be generated from cell_type_palette. Defaults to None.
-    spot_size (float) (optional): The size of the spots in the spatial plot. Defaults to
-    1.5.
-    spatial_plot (bool) (optional): Whether to show the spatial plot. Defaults to True.
-    proportion_plot (bool) (optional): Whether to show the proportion plot. Defaults to
-    True.
-    return_adata (bool) (optional): Whether to return the AnnData object with the
-    clustering results. Defaults to False.
-    **kwargs: Additional keyword arguments to pass to the scanpy spatial plot function.
+        sample (AnnData): An AnnData object that has been run through stLearn.
+        resolution (float) (optional): The resolution to use for the clustering. Defaults to 0.5.
+        cluster_palette (str) (optional): Name of matplotlib colormap to use for clusters. Defaults to 'Dark2_r'.
+        cell_type_palette (str) (optional): Name of matplotlib colormap to use for cell types. Defaults to 'tab20'.
+        cell_colors (dict) (optional): Dictionary mapping cell types to colors. If not provided, colors will be generated from cell_type_palette. Defaults to None.
+        spot_size (float) (optional): The size of the spots in the spatial plot. Defaults to 1.5.
+        spatial_plot (bool) (optional): Whether to show the spatial plot. Defaults to True.
+        proportion_plot (bool) (optional): Whether to show the proportion plot. Defaults to True.
+        return_adata (bool) (optional): Whether to return the AnnData object with the clustering results. Defaults to False.
+        **kwargs: Additional keyword arguments to pass to the scanpy spatial plot function.
     
     Returns:
-    AnnData: An AnnData object with the clustering results.
+        AnnData: An AnnData object with the clustering results.
     """
 
     if sample.adata is None:
@@ -435,32 +418,32 @@ def lr_interaction_clustering(
     LR.columns = list(sample.adata.uns["lr_summary"].index)
     LR.index = sample.adata.obs.index
 
-    LR = sc.AnnData(LR)
-    sc.pp.normalize_total(LR, inplace=True)
-    sc.pp.log1p(LR)
-    sc.pp.pca(LR)
-    sc.pp.highly_variable_genes(LR, flavor="seurat", n_top_genes=2000)
-    sc.pp.neighbors(LR, use_rep="X_pca", n_neighbors=15)
-    sc.tl.leiden(LR, resolution=resolution)
+    LR = scanpy.AnnData(LR)
+    scanpy.pp.normalize_total(LR, inplace=True)
+    scanpy.pp.log1p(LR)
+    scanpy.pp.pca(LR)
+    scanpy.pp.highly_variable_genes(LR, flavor="seurat", n_top_genes=2000)
+    scanpy.pp.neighbors(LR, use_rep="X_pca", n_neighbors=15)
+    scanpy.tl.leiden(LR, resolution=resolution)
     
-    sc.tl.rank_genes_groups(LR, groupby='leiden', method='wilcoxon')
-    # sc.pl.rank_genes_groups(LR, n_genes=25, sharey=False)
-    sc.tl.dendrogram(LR, groupby='leiden')
-    sc.pl.rank_genes_groups_dotplot(LR, n_genes=10, groupby='leiden')
+    scanpy.tl.rank_genes_groups(LR, groupby='leiden', method='wilcoxon')
+    # scanpy.pl.rank_genes_groups(LR, n_genes=25, sharey=False)
+    scanpy.tl.dendrogram(LR, groupby='leiden')
+    scanpy.pl.rank_genes_groups_dotplot(LR, n_genes=10, groupby='leiden')
     
     LR.obsm = sample.adata.obsm
     LR.uns = sample.adata.uns
     LR.obs["leiden"] = LR.obs["leiden"].astype("int64")
 
-    sc.pp.pca(LR)
-    sc.pp.highly_variable_genes(LR, flavor="seurat", n_top_genes=2000)
-    sc.pp.neighbors(LR, use_rep="X_pca", n_neighbors=15)
-    sc.tl.umap(LR)
+    scanpy.pp.pca(LR)
+    scanpy.pp.highly_variable_genes(LR, flavor="seurat", n_top_genes=2000)
+    scanpy.pp.neighbors(LR, use_rep="X_pca", n_neighbors=15)
+    scanpy.tl.umap(LR)
     
     sample.adata.obs["LR_Cluster"] = LR.obs["leiden"].astype("str")
     
     if spatial_plot:
-        sc.pl.spatial(sample.adata, color="LR_Cluster", size=spot_size, 
+        scanpy.pl.spatial(sample.adata, color="LR_Cluster", size=spot_size, 
                      palette=cluster_palette, **kwargs)
         
     if proportion_plot:
@@ -520,26 +503,19 @@ def run_gsea(
     """Runs GSEA analysis on a sample.
 
     Args:
-        sample (CCIData) (optional): The sample to run GSEA on. If not given, lrs are
-        used. Defaults to None.
-        assay (str) (optional): The assay to use for the GSEA analysis. Defaults to
-        'raw'.
-        lrs (list) (optional): A list of LR pairs to use for GSEA analysis instead of
-        sample. Defaults to None.
+        sample (CCIData) (optional): The sample to run GSEA on. If not given, lrs are used. Defaults to None.
+        assay (str) (optional): The assay to use for the GSEA analysis. Defaults to 'raw'.
+        lrs (list) (optional): A list of LR pairs to use for GSEA analysis instead of sample. Defaults to None.
         organism (str) (optional): The organism to use. Defaults to 'human'.
-        gene_sets (list) (optional): The gene sets to use for gseapy analysis. Defaults
-        to ['KEGG_2021_Human',
-        'MSigDB_Hallmark_2020'].
+        gene_sets (list) (optional): The gene sets to use for gseapy analysis. Defaults to ['KEGG_2021_Human', 'MSigDB_Hallmark_2020'].
         show_dotplot (bool) (optional): Whether to show the dotplot. Defaults to False.
         show_barplot (bool) (optional): Whether to show the barplot. Defaults to True.
         top_term (int) (optional): The number of top terms to show. Defaults to 5.
         figsize (tuple) (optional): The size of the figure. Defaults to (3,5).
-        return_results (bool) (optional): Whether to return the results DataFrame. 
-        Defaults to True.
+        return_results (bool) (optional): Whether to return the results DataFrame.  Defaults to True.
 
     Returns:
-        pd.DataFrame or None: A DataFrame with the GSEA results if return_results=True, 
-        otherwise None.
+        pd.DataFrame or None: A DataFrame with the GSEA results if return_results=True, otherwise None.
     """
 
     gene_list = set()
@@ -609,16 +585,14 @@ def pathway_subset(
     strict: bool = False,
     assay_name: str = None
     ) -> CCIData:
-    """Subsets a sample to only include interactions between genes in a set of
-    pathways.
+    """Subsets a sample to only include interactions between genes in a set of pathways.
 
     Args:
         sample (CCIData): The sample to subset.
         assay (str) (optional): The assay to use for the subset. Defaults to 'raw'.
         gsea_results (pd.DataFrame): The GSEA results to use to subset the sample.
         terms (list): The terms to subset the sample with.
-        strict (bool): Whether to only include interactions between genes in the
-        same pathway.
+        strict (bool): Whether to only include interactions between genes in the same pathway.
 
     Returns:
         CCIdata: The sample with an added assay containing the subsetted interactions.
@@ -666,12 +640,10 @@ def pathway_subset(
 
 
 def add_lr_module_score(sample, lr_list, key_name="score"):
-    """Adds a module score to an AnnData object run through stLearn based on the
-    interactions in a list of ligand-receptor pairs.
+    """Adds a module score to an AnnData object run through stLearn based on the interactions in a list of ligand-receptor pairs.
 
     Args:
-        sample (AnnData): The AnnData object to add the score to. Must be processed
-        through stLearn.
+        sample (AnnData): The AnnData object to add the score to. Must be processed through stLearn.
         lr_list (list): The list of ligand-receptor pairs to use.
         key_name (str): The key to use for the score.
 
@@ -684,7 +656,7 @@ def add_lr_module_score(sample, lr_list, key_name="score"):
     lr_counts.columns = sample.uns['lr_summary'].index
 
     adata = ad.AnnData(lr_counts)
-    sc.tl.score_genes(adata, gene_list=lr_list)
+    scanpy.tl.score_genes(adata, gene_list=lr_list)
     sample.obs[key_name] = adata.obs['score']
 
     return sample

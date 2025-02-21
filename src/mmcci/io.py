@@ -3,18 +3,15 @@ import numpy as np
 import scanpy as sc
 import pickle
 import json
-from .CCIData_class import CCIData
+from mmcci.CCIData_class import CCIData
 
 def read_stLearn(path, key="cell_type", save_anndata=True) -> CCIData:
-    """Reads a stLearn ligand-receptor analysis output and converts it to a CCIData 
-    object.
+    """Reads a stLearn ligand-receptor analysis output and converts it to a CCIData object.
 
     Args:
         path (str): The path to the stLearn ligand-receptor analysis output.
-        key (str) (optional): The key in adata.obs that was used for CCI. Defaults to
-            "cell_type".
-        save_anndata (bool) (optional): Whether to save the AnnData object in the 
-            CCIData object. Defaults to True.
+        key (str) (optional): The key in adata.obs that was used for CCI. Defaults to "cell_type".
+        save_anndata (bool) (optional): Whether to save the AnnData object in the CCIData object. Defaults to True.
 
     Returns:
         CCIData: The CCIData object.
@@ -40,15 +37,12 @@ def read_stLearn(path, key="cell_type", save_anndata=True) -> CCIData:
 
 
 def convert_stLearn(adata, key="cell_type", save_anndata=True) -> CCIData:
-    """Reads a stLearn ligand-receptor analysis output and converts it to a CCIData 
-    object.
+    """Reads a stLearn ligand-receptor analysis output and converts it to a CCIData object.
 
     Args:
         adata (AnnData): The stLearn ligand-receptor analysis output.
-        key (str) (optional): The key in adata.obs that was used for CCI. Defaults to
-            "cell_type".
-        save_anndata (bool) (optional): Whether to save the AnnData object in the 
-            CCIData object. Defaults to True.
+        key (str) (optional): The key in adata.obs that was used for CCI. Defaults to "cell_type".
+        save_anndata (bool) (optional): Whether to save the AnnData object in the CCIData object. Defaults to True.
 
     Returns:
         CCIData: The CCIData object.
@@ -72,8 +66,7 @@ def convert_stLearn(adata, key="cell_type", save_anndata=True) -> CCIData:
 
 
 def read_CellPhoneDB(means_path, pvals_path, n_spots=None) -> CCIData:
-    """Reads a CellPhoneDB interaction scores txt file and converts it to a CCIData
-    object.
+    """Reads a CellPhoneDB interaction scores txt file and converts it to a CCIDataobject.
 
     Args:
         means_path (str): Path to the means txt file.

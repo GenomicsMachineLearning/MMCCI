@@ -1,6 +1,6 @@
 ﻿mmcci.it.get\_lr\_pairs
 =======================
 
-.. currentmodule:: mmcci
+.. currentmodule:: mmcci.it
 
-.. autofunction:: it.get_lr_pairs
+.. autofunction:: get_lr_pairs

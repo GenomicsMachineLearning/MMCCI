@@ -1,6 +1,6 @@
 ﻿mmcci.an.lr\_interaction\_clustering
 ====================================
 
-.. currentmodule:: mmcci
+.. currentmodule:: mmcci.an
 
-.. autofunction:: an.lr_interaction_clustering
+.. autofunction:: lr_interaction_clustering

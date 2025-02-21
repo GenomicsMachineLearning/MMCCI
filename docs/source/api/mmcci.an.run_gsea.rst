@@ -1,6 +1,6 @@
 ﻿mmcci.an.run\_gsea
 ==================
 
-.. currentmodule:: mmcci
+.. currentmodule:: mmcci.an
 
-.. autofunction:: an.run_gsea
+.. autofunction:: run_gsea

@@ -5,19 +5,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.gridspec as gridspec
 
-from . import plot_helper
-from . import analysis as an
-
-
-from matplotlib import pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap
-import networkx as nx
-import numpy as np
-import pandas as pd
-import matplotlib.gridspec as gridspec
-
-from . import plot_helper
-from . import analysis as an
+from mmcci import plot_helper
+from mmcci import an
 
 
 def network_plot(
@@ -44,40 +33,26 @@ def network_plot(
     title=None,
     title_size=14
 ):
-    """Plots a network with optional edge significance highlighting and node
-    coloring based on in-degree and out-degree difference.
+    """Plots a network with optional edge significance highlighting and node coloring based on in-degree and out-degree difference.
 
     Args:
-        network (pandas.DataFrame or numpy.ndarray): The adjacency matrix representing
-        the network.
-        p_vals (pandas.DataFrame or numpy.ndarray, optional): A matrix of p-values
-        corresponding to the edges in `network`. If not provided, significance values
-        will not be plotted. Defaults to None.
-        diff_plot (bool, optional): Whether you are plotting the network difference, to
-        show up and down-regulated edges. Defaults to False.
-        normalise (bool, optional): Whether to normalize the network matrix before
-        plotting. Defaults to True.
-        remove_unconnected (bool, optional): Whether to remove cell types that
-        do not interact with any cell types. Defaults to True.
+        network (pandas.DataFrame or numpy.ndarray): The adjacency matrix representing the network.
+        p_vals (pandas.DataFrame or numpy.ndarray, optional): A matrix of p-values corresponding to the edges in `network`. If not provided, significance values will not be plotted. Defaults to None.
+        diff_plot (bool, optional): Whether you are plotting the network difference, to show up and down-regulated edges. Defaults to False.
+        normalise (bool, optional): Whether to normalize the network matrix before plotting. Defaults to True.
+        remove_unconnected (bool, optional): Whether to remove cell types that do not interact with any cell types. Defaults to True.
         show_labels (bool, optional): Whether to show node labels. Defaults to True.
-        p_val_cutoff (float, optional): The p-value cutoff for determining significant
-        edges. Defaults to 0.05.
+        p_val_cutoff (float, optional): The p-value cutoff for determining significant edges. Defaults to 0.05.
         edge_weight (float, optional): The base weight for edges. Defaults to 20.
         text_size (int, optional): The font size for node labels. Defaults to 15.
         node_size (int, optional): The size of the nodes. Defaults to 2500.
         figsize (tuple, optional): The size of the figure. Defaults to None.
-        arrowsize (int, optional): The size of the arrow heads for edges. Defaults to
-        50.
-        node_label_dist (float, optional): A factor for adjusting the distance between
-        nodes and labels. Defaults to 1.
-        p_val_text_size (int, optional): The font size for p-value labels. Defaults to
-        10.
-        node_colors (dict, optional): A dictionary of colors for each node. Overwrites
-        node_palette. Defaults to None.
-        node_palette (str, optional): The name of the color palette to use for nodes.
-        Defaults to "tab20".
-        outer_node_palette (str, optional): The name of the color palette to use for
-        outer nodes to show sender/reciever nodes. Defaults to None.
+        arrowsize (int, optional): The size of the arrow heads for edges. Defaults to 50.
+        node_label_dist (float, optional): A factor for adjusting the distance between nodes and labels. Defaults to 1.
+        p_val_text_size (int, optional): The font size for p-value labels. Defaults to 10.
+        node_colors (dict, optional): A dictionary of colors for each node. Overwrites node_palette. Defaults to None.
+        node_palette (str, optional): The name of the color palette to use for nodes. Defaults to "tab20".
+        outer_node_palette (str, optional): The name of the color palette to use for outer nodes to show sender/reciever nodes. Defaults to None.
         show (bool, optional): Whether to show the plot or not. Defaults to True.
         show_legend (bool, optional): Whether to show legend. Defaults to False.
         legend_size (int, optional): Font size for legend. Defaults to 12.
@@ -441,12 +416,10 @@ def chord_plot(
     """Plots a chord plot of a network
 
     Args:
-        network (pandas.DataFrame or numpy.ndarray): The adjacency matrix representing
-        the network.
+        network (pandas.DataFrame or numpy.ndarray): The adjacency matrix representing the network.
         min_int (float): Minimum interactions to display cell type. Defaults to 0.01.
         n_top_ccis (int): Number of top cell types to display. Defaults to 10.
-        colors (dict): Dict of colors for each cell type to use for the plot. Defaults
-        to None.
+        colors (dict): Dict of colors for each cell type to use for the plot. Defaults to None.
         show (bool): Whether to show plot or not. Defaults to True.
         title (str): Title of the plot. Defaults to None.
         title_size (int): Font size of the title. Defaults to 14.
@@ -589,8 +562,7 @@ def lr_top_dissimilarity(
     Args:
         dissimilarity_scores (dict): A dictionary of dissimilarity scores.
         n (int): Number of LR pairs to plot.
-        top (bool): If True, plot LR pairs with highest dissimilarity scores.
-        If False, plot LR pairs with lowest dissimilarity scores.
+        top (bool): If True, plot LR pairs with highest dissimilarity scores. If False, plot LR pairs with lowest dissimilarity scores.
         x_label_size (int): Font size for x-axis label. Defaults to 18.
         y_label_size (int): Font size for y-axis label. Defaults to 24.
         x_tick_size (int): Font size for ticks. Defaults to 14.
@@ -669,8 +641,7 @@ def lr_barplot(
     Args:
         sample (CCIData): The CCIData object.
         assay (str): The assay to use. Defaults to "raw".
-        n (int): Number of LR pairs to plot. If None, plot all LR pairs. Defaults to
-        15.
+        n (int): Number of LR pairs to plot. If None, plot all LR pairs. Defaults to 15.
         x_label_size (int): Font size for x-axis label. Defaults to 18.
         y_label_size (int): Font size for y-axis label. Defaults to 24.
         x_tick_size (int): Font size for tick labels. Defaults to 14.
@@ -728,8 +699,7 @@ def lrs_per_celltype(
     show=True,
     title=None,
 ):
-    """Plots a bar plot of LR pairs and their proportions for a sender and receiver cell
-    type pair along with p_values (optional).
+    """Plots a bar plot of LR pairs and their proportions for a sender and receiver cell type pair along with p_values (optional).
 
     Args:
         sample (CCIData): The CCIData object.

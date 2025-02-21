@@ -1,6 +1,6 @@
 import numpy as np
 
-from . import tools as tl
+from mmcci import tl
 
 
 def dissimilarity_score(
@@ -16,15 +16,11 @@ def dissimilarity_score(
 
     Args:
         m1, m2 (pd.DataFrame): Two matrices to compare.
-        lmbda (float) (optional): Weighting factor for weighted vs binary dissimilarity
-        (0-1). 0 is fully binary and 1 is fully weighted. Defaults to 0.5.
-        normalise (bool) (optional): Normalizes matrices before comparison. Defaults to
-        False.
+        lmbda (float) (optional): Weighting factor for weighted vs binary dissimilarity (0-1). 0 is fully binary and 1 is fully weighted. Defaults to 0.5.
+        normalise (bool) (optional): Normalizes matrices before comparison. Defaults to False.
         binary (bool) (optional): Treats matrices as binary (0 or 1). Defaults to False.
-        trim (bool) (optional): Trims matrices to common rows and columns. Otherwise
-        pads 0s to uncommon rows and columns. Defaults to False.
-        only_non_zero (bool) (optional): Only considers non-zero edges for calculation.
-        Defaults to False.
+        trim (bool) (optional): Trims matrices to common rows and columns. Otherwise pads 0s to uncommon rows and columns. Defaults to False.
+        only_non_zero (bool) (optional): Only considers non-zero edges for calculation. Defaults to False.
 
     Returns:
         pd.DataFrame: The dissimilarity scores between the two matrices.
@@ -77,15 +73,12 @@ def dissimilarity_score(
 def multiply_non_zero_values(dataframes, strict=False):
     """Multiply non-zero values across a list of pandas DataFrames.
 
-    Parameters:
-    - dataframes (list): A list of pandas DataFrames with the same shape and column/row
-    names.
-    - strict (bool) (optional): If True, only interactions where more than 50% of the
-    values are non-zero will be multiplied. Defaults to False.
+    Args:
+    dataframes (list): A list of pandas DataFrames with the same shape and column/row names.
+    strict (bool) (optional): If True, only interactions where more than 50% of the values are non-zero will be multiplied. Defaults to False.
 
     Returns:
-    - pd.DataFrame: A new DataFrame where each cell contains the product of non-zero
-    values or zero if more than 50% of the values in the corresponding cells are zero.
+        pd.DataFrame: A new DataFrame where each cell contains the product of non-zero values or zero if more than 50% of the values in the corresponding cells are zero.
     """
 
     result_df = dataframes[0]

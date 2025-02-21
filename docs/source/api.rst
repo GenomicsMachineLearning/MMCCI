@@ -1,11 +1,8 @@
 API
 ===
-Import MMCCI as::
-
-    import mmcci
 
 CCIData
-~~~~~
+~~~~~~~
 
 .. module:: mmcci.CCIData_class
 .. currentmodule:: mmcci
@@ -16,7 +13,7 @@ CCIData
     CCIData
 
 Integration
-~~~~~
+~~~~~~~~~~~
 
 .. module:: mmcci.it
 .. currentmodule:: mmcci
@@ -30,7 +27,7 @@ Integration
     it.integrate_networks
 
 Analysis
-~~~~~
+~~~~~~~~
 
 .. module:: mmcci.an
 .. currentmodule:: mmcci
@@ -47,7 +44,7 @@ Analysis
     an.add_lr_module_score
 
 Scoring
-~~~~~
+~~~~~~~
 
 .. module:: mmcci.sc
 .. currentmodule:: mmcci
@@ -59,24 +56,24 @@ Scoring
     sc.multiply_non_zero_values
 
 Plotting
-~~~~~
+~~~~~~~~
 
-.. module:: mmcci.plt
+.. module:: mmcci.pl
 .. currentmodule:: mmcci
 
 .. autosummary::
     :toctree: api
 
-    plt.network_plot
-    plt.chord_plot
-    plt.dissim_hist
-    plt.lr_top_dissimilarity
-    plt.silhouette_scores_plot
-    plt.lr_barplot
-    plt.lrs_per_celltype
+    pl.network_plot
+    pl.chord_plot
+    pl.dissim_hist
+    pl.lr_top_dissimilarity
+    pl.silhouette_scores_plot
+    pl.lr_barplot
+    pl.lrs_per_celltype
 
 IO
-~~~~~
+~~~
 
 .. module:: mmcci.io
 .. currentmodule:: mmcci

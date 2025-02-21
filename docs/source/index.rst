@@ -1,52 +1,54 @@
 |PyPI| |Downloads| |Docs|
 
-MMCCI - Multi-platform, Multi-sample Cell-Cell Interaction Integrative Analysis of Single Cell and Spatial Data
-================================================
+MMCCI
+======
 
-**MMCCI** is a Python package for analyzing cell–cell interaction data from different CCI tools. This documentation provides an overview, installation guidelines, API reference, and usage examples.
+Multi-platform, Multi-sample Cell-Cell Interaction Integrative Analysis of Single Cell and Spatial Data
+----------------------------------------------------------------------------------------------------------------
 
-.. image:: https://github.com/GenomicsMachineLearning/MMCCI/blob/main/docs/images/analyses_pipeline.png
+**MMCCI** is a Python package for analyzing cell–cell interaction data from different CCI tools. 
+This documentation provides an overview, installation guidelines, API reference, and usage examples.
+
+.. image:: https://raw.githubusercontent.com/GenomicsMachineLearning/MMCCI/refs/heads/main/docs/images/analyses_pipeline.png
     :alt: MMCCI title figure
-    :width: 400px
+    :width: 800px
     :align: center
     :target: https://doi.org/10.1101/2024.02.28.582639
 
-Manuscript
-----------
-.. Please see our manuscript for more details.
+|
+MMCCI's key applications
+--------------------------
 
-.. Squidpy's key applications
-.. --------------------------
-.. - Build and analyze the neighborhood graph from spatial coordinates.
-.. - Compute spatial statistics for cell-types and genes.
-.. - Efficiently store, analyze and visualize large tissue images, leveraging `skimage`_.
-.. - Interactively explore `anndata`_ and large tissue images in `napari`_.
+MMCCI allows users to integrate multiple CCI results together, both:
 
-.. Getting started with Squidpy
-.. ----------------------------
-.. - Browse :doc:`notebooks/tutorials/index` and :doc:`notebooks/examples/index`.
-.. - Discuss usage on `discourse`_ and development on `github`_.
+   1. Samples from a single platform (eg. Visium)
+   2. Samples from multiple platforms (eg. Visium, Xenium and CosMX)
 
-.. Contributing to Squidpy
-.. -----------------------
-.. We are happy about any contributions! Before you start, check out our `contributing guide`_.
+MMCCI provides multiple useful analyses that can be run on the integrated networks or from a single sample:
+
+   1. Network comparison between groups with permutation testing
+   2. Clustering of LR pairs with similar networks
+   3. Clustering of spots/cells with similar interaction scores
+   4. Sender-receiver LR querying
+   5. GSEA pathway analysis
+
 
 .. toctree::
     :caption: General
-    :maxdepth: 1
-    :hidden:
-
-    getting_started
-   ..  api
-   ..  release_notes
-
-.. toctree::
-    :caption: Gallery
     :maxdepth: 2
     :hidden:
 
-   ..  notebooks/tutorials/index
-   ..  notebooks/examples/index
+    getting_started
+    api
+
+.. toctree::
+    :caption: Examples
+    :maxdepth: 2
+    :hidden:
+
+    notebooks/brain_aging_example
+    notebooks/melanoma_example
+    notebooks/loading_CCI_results
 
 .. |PyPI| image:: https://img.shields.io/pypi/v/mmcci.svg
     :target: https://pypi.org/project/mmcci/

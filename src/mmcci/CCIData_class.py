@@ -193,10 +193,8 @@ class CCIData:
         """Renames cell types in a CCIData.
 
         Args:
-            replacements (dict): A dictionary of replacements, where the keys are the 
-                old cell type names and the values are the new cell type names.
-            assay (str): The assay to rename the cell types in. If None, all assays are
-                renamed.
+            replacements (dict): A dictionary of replacements, where the keys are the old cell type names and the values are the new cell type names.
+            assay (str): The assay to rename the cell types in. If None, all assays are renamed.
 
         Returns:
             CCIData: A new CCIData object with the cell types renamed.
@@ -247,8 +245,7 @@ class CCIData:
         Args:
             cell_types (list): A list of cell types to merge.
             new_cell_type (str): The name of the new cell type after merging.
-            assay (str): The assay to merge the cell types in. If None, all assays are
-                merged.
+            assay (str): The assay to merge the cell types in. If None, all assays are merged.
                 
         Returns:
             CCIData: A new CCIData object with the cell types merged.
@@ -313,8 +310,7 @@ class CCIData:
     
         Args:
             lr_pairs (list): A list of LR pairs to include in the subsetted data.
-            assay (str): The assay to subset the LR pairs in. If None, all assays are
-                subsetted.
+            assay (str): The assay to subset the LR pairs in. If None, all assays are subsetted.
             new_assay (str): The name of the new assay after subsetting.
             
         Returns:
@@ -339,8 +335,7 @@ class CCIData:
 
         Args:
             scale_factor (float): The factor to scale the CCI scores by.
-            assay (str): The assay to scale the CCI scores in. If None, all assays are
-                scaled.
+            assay (str): The assay to scale the CCI scores in. If None, all assays are scaled.
             new_assay (str): The name of the new assay after scaling.
 
         Returns:
@@ -363,8 +358,7 @@ class CCIData:
         """Scales the CCI scores in a CCIData object by the number of spots.
 
         Args:
-            assay (str): The assay to scale the CCI scores in. If None, all assays are
-                scaled.
+            assay (str): The assay to scale the CCI scores in. If None, all assays are scaled.
             new_assay (str): The name of the new assay after scaling.
 
         Returns:
@@ -386,8 +380,7 @@ class CCIData:
 
         Args:
             cutoff (float): The p-value cutoff to filter the CCI scores by.
-            assay (str): The assay to filter the CCI scores in. If None, all assays are
-                filtered.
+            assay (str): The assay to filter the CCI scores in. If None, all assays are filtered.
             new_assay (str): The name of the new assay after filtering.
 
         Returns:
@@ -415,12 +408,9 @@ class CCIData:
         """Calculates the overall CCI scores in a CCIData object.
 
         Args:
-            assay (str): The assay to calculate the overall CCI scores in. If None, all
-                assays are calculated
-            name (str): The name of the network after calculating the overall CCI
-                scores.
-            normalize (bool): If True, normalize each LR CCI score network. Defaults to
-                True.
+            assay (str): The assay to calculate the overall CCI scores in. If None, all assays are calculated
+            name (str): The name of the network after calculating the overall CCI scores.
+            normalize (bool): If True, normalize each LR CCI score network. Defaults to True.
             
         Returns:
             CCIData: A new CCIData object with the overall CCI scores calculated.
@@ -461,15 +451,13 @@ class CCIData:
         assay: str = "raw",
         key: str = "cci_scores"
         ) -> dict:
-        """Calculates the proportion of each LR pair in a sample for a specific cell type
-        sender and receiver.
+        """Calculates the proportion of each LR pair in a sample for a specific cell type sender and receiver.
 
         Args:
             sender (str): The sender cell type.
             reciever (str): The receiver cell type.
             assay (str) (optional): The assay to use. Defaults to 'raw'.
-            key (str) (optional): The key to use. Defaults to 
-            'cci_scores'.
+            key (str) (optional): The key to use. Defaults to 'cci_scores'.
 
         Returns:
             dict: A list of LR pairs and proportion of its weighting.
@@ -555,8 +543,7 @@ class CCIData:
         sender: str = None,
         reciever: str = None
         ) -> dict:
-        """Returns the p-values for each LR pair in a sample for a specific sender and
-        receiver cell type.
+        """Returns the p-values for each LR pair in a sample for a specific sender and receiver cell type.
         
         Args:
             assay (str) (optional): The assay to use. Defaults to 'raw'.
@@ -667,10 +654,8 @@ class CCIData:
         Args:
             assay (str): The assay to use. Defaults to 'raw'.
             gsea_results (pd.DataFrame): GSEA results. Defaults to None.
-            strict (bool): If True, both ligand and receptor must be in the gene list.
-                If False, only one must be in the gene list. Defaults to True.
-            cutoff (float): The p-value cutoff to filter the GSEA results by. Defaults
-                to 0.05.
+            strict (bool): If True, both ligand and receptor must be in the gene list. If False, only one must be in the gene list. Defaults to True.
+            cutoff (float): The p-value cutoff to filter the GSEA results by. Defaults to 0.05.
             assay_name (str): The name of the new assay. Defaults to 'pathway'.
             
         Returns:

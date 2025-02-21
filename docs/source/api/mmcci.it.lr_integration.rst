@@ -1,6 +1,6 @@
 ﻿mmcci.it.lr\_integration
 ========================
 
-.. currentmodule:: mmcci
+.. currentmodule:: mmcci.it
 
-.. autofunction:: it.lr_integration
+.. autofunction:: lr_integration
