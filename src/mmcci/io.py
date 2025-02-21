@@ -3,7 +3,7 @@ import numpy as np
 import scanpy as sc
 import pickle
 import json
-from mmcci.CCIData_class import CCIData
+from .CCIData_class import CCIData
 
 def read_stLearn(path, key="cell_type", save_anndata=True) -> CCIData:
     """Reads a stLearn ligand-receptor analysis output and converts it to a CCIData object.
