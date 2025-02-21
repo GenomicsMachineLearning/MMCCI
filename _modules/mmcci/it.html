@@ -1,0 +1,510 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mmcci.it &mdash; MMCCI 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+
+  
+    <link rel="canonical" href="/_modules/mmcci/it.html" />
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MMCCI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started with MMCCI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../notebooks/brain_aging_example.html">MMCCI Multi-Platform Aging Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../notebooks/melanoma_example.html">MMCCI Melanoma CCI Integration and Analysis Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../notebooks/loading_CCI_results.html">Loading CCI results</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MMCCI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mmcci.it</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mmcci.it</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">sc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">tl</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.CCIData_class</span><span class="w"> </span><span class="kn">import</span> <span class="n">CCIData</span>
+
+
+<div class="viewcode-block" id="get_lr_pairs">
+<a class="viewcode-back" href="../../api/mmcci.it.get_lr_pairs.html#mmcci.it.get_lr_pairs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_lr_pairs</span><span class="p">(</span>
+    <span class="n">samples</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+    <span class="n">assay</span> <span class="o">=</span> <span class="s2">&quot;raw&quot;</span><span class="p">,</span>
+    <span class="n">method</span> <span class="o">=</span> <span class="s2">&quot;&gt;=50%&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Identifies the LR pairs present in a list of samples according to the given method.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        samples (list): A list of CCIData objects.</span>
+<span class="sd">        assay (str) (optional): The assay or assays to use for identifying LR pairs. Defaults to &quot;raw&quot;.</span>
+<span class="sd">        method (str) (optional): The method to use for identifying LR pairs. Options are &quot;all&quot;, &quot;&gt;=50%&quot;, &quot;&gt;50%&quot;, and &quot;any&quot;. Defaults to &quot;&gt;=50%&quot;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list: A list of LR pairs that are present in a majority of samples</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">lr_pairs_counts</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">lr_pairs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">assays</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">assay</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">assays</span> <span class="o">=</span> <span class="p">[</span><span class="n">assay</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">))]</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">assay</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Assay list must be the same length as the samples list.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">assays</span> <span class="o">=</span> <span class="n">assay</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">lr_pair</span><span class="p">,</span> <span class="n">matrix</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assays</span><span class="p">[</span><span class="n">i</span><span class="p">]][</span><span class="s1">&#39;cci_scores&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">values</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">lr_pairs_counts</span><span class="p">[</span><span class="n">lr_pair</span><span class="p">]</span> <span class="o">=</span> <span class="n">lr_pairs_counts</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">lr_pair</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">lr_pair</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">lr_pairs_counts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">count</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
+                <span class="n">lr_pairs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lr_pair</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;&gt;=50%&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">lr_pairs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lr_pair</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;&gt;50%&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">lr_pairs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lr_pair</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;any&quot;</span><span class="p">:</span>
+            <span class="n">lr_pairs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lr_pair</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Method must be &#39;all&#39;, &#39;&gt;=50%&#39;, &#39;&gt;50%&#39;, or &#39;any&#39;.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">lr_pairs</span></div>
+
+
+
+<div class="viewcode-block" id="calc_scale_factors">
+<a class="viewcode-back" href="../../api/mmcci.it.calc_scale_factors.html#mmcci.it.calc_scale_factors">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calc_scale_factors</span><span class="p">(</span>
+    <span class="n">samples</span><span class="p">,</span> 
+    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> 
+    <span class="n">assay</span><span class="o">=</span><span class="s2">&quot;raw&quot;</span><span class="p">,</span> 
+    <span class="n">group_key</span><span class="o">=</span><span class="s2">&quot;platform&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the scale factors for normalizing matrices between different platforms.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        samples (list): A list of CCIData objects.</span>
+<span class="sd">        method (str) (optional): The method to use for calculating scale factors.</span>
+<span class="sd">        assay (str) (optional): The assay or assays to use for calculating scale factors. Defaults to &quot;raw&quot;.</span>
+<span class="sd">        group_key (str) (optional): The key to use for grouping samples. Defaults to &quot;platform&quot;.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: A dictionary where keys are LR pairs and values are the scale factors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">scale_factors</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">assays</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">assay</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">assays</span> <span class="o">=</span> <span class="p">[</span><span class="n">assay</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">))]</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">assay</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Assay list must be the same length as the samples list.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">assays</span> <span class="o">=</span> <span class="n">assay</span>
+    
+    <span class="c1"># get all the unique group keys</span>
+    <span class="n">group_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">sample</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="n">group_key</span><span class="p">]</span> <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">])</span>
+    <span class="n">group_samples</span> <span class="o">=</span> <span class="p">{</span><span class="n">group_key</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">group_key</span> <span class="ow">in</span> <span class="n">group_keys</span><span class="p">}</span>
+    
+    <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">:</span>
+        <span class="n">group_samples</span><span class="p">[</span><span class="n">sample</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="n">group_key</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
+    
+
+    <span class="c1"># get the scale factors for each group</span>
+    <span class="k">for</span> <span class="n">group</span><span class="p">,</span> <span class="n">sample_list</span> <span class="ow">in</span> <span class="n">group_samples</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">total_counts</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">lr_pair_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sample_list</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">lr_pair</span><span class="p">,</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">sample_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assays</span><span class="p">[</span><span class="n">i</span><span class="p">]][</span><span class="s1">&#39;cci_scores&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">lr_pair_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;mean&quot;</span><span class="p">:</span>
+                    <span class="n">total_counts</span> <span class="o">+=</span> <span class="n">df</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span>
+                    <span class="n">total_counts</span> <span class="o">+=</span> <span class="n">df</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;median&quot;</span><span class="p">:</span>
+                    <span class="n">total_counts</span> <span class="o">+=</span> <span class="n">df</span><span class="o">.</span><span class="n">median</span><span class="p">()</span><span class="o">.</span><span class="n">median</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;sum&quot;</span><span class="p">:</span>
+                    <span class="n">total_counts</span> <span class="o">+=</span> <span class="n">df</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid method option.&quot;</span><span class="p">)</span>
+
+        <span class="n">total_counts</span> <span class="o">=</span> <span class="n">total_counts</span> <span class="o">/</span> <span class="n">lr_pair_count</span>
+        <span class="n">scale_factors</span><span class="p">[</span><span class="n">group</span><span class="p">]</span> <span class="o">=</span> <span class="n">total_counts</span>
+        
+    <span class="c1"># divide each group by the max scale factor</span>
+    <span class="n">max_scale_factor</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">scale_factors</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">group</span><span class="p">,</span> <span class="n">scale_factor</span> <span class="ow">in</span> <span class="n">scale_factors</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">scale_factors</span><span class="p">[</span><span class="n">group</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_scale_factor</span> <span class="o">/</span> <span class="n">scale_factor</span>
+        
+    <span class="k">return</span> <span class="n">scale_factors</span></div>
+
+
+
+<div class="viewcode-block" id="lr_integration">
+<a class="viewcode-back" href="../../api/mmcci.it.lr_integration.html#mmcci.it.lr_integration">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">lr_integration</span><span class="p">(</span>
+    <span class="n">samples</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;&gt;=50%&quot;</span><span class="p">,</span>
+    <span class="nb">sum</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">assay</span><span class="o">=</span><span class="s2">&quot;raw&quot;</span><span class="p">,</span>
+    <span class="n">integrate_pvals</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">p_val_method</span><span class="o">=</span><span class="s2">&quot;stouffer&quot;</span><span class="p">,</span>
+    <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CCIData</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Integrates a list of samples into a single sample per lr pair.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        samples (list): A list of CCIData objects.</span>
+<span class="sd">        method (str) (optional): The method to use for identifying LR pairs. Options are &quot;all&quot;, &quot;&gt;=50%&quot;, &quot;&gt;50%&quot;, and &quot;any&quot;. Defaults to &quot;&gt;=50%&quot;.</span>
+<span class="sd">        sum (bool) (optional): Whether to sum instead of multiply the matrices. Defaults to False.</span>
+<span class="sd">        strict (bool) (optional): If True, only interactions where more than 50% of the values are non-zero will be multiplied. Defaults to False.</span>
+<span class="sd">        assay (str) (optional): The assay or assays to use for integrating samples. Defaults to &quot;raw&quot;.</span>
+<span class="sd">        integrate_pvals (bool) (optional): Whether to integrate p-values (if possible). Defaults to True.</span>
+<span class="sd">        p_val_method (str) (optional): The method to use for combining p-values. Options are &quot;stouffer&quot; and &quot;fisher&quot;. Defaults to &quot;stouffer&quot;.</span>
+<span class="sd">        metadata (dict) (optional): Additional metadata to include in the integrated sample. Defaults to None.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        CCIData: The integrated sample.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No samples provided.&quot;</span><span class="p">)</span>
+    
+    <span class="n">assays</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">assay</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">assays</span> <span class="o">=</span> <span class="p">[</span><span class="n">assay</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">))]</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">assay</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Assay list must be the same length as the samples list.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">assays</span> <span class="o">=</span> <span class="n">assay</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assays</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Sample does not have the specified assay.&quot;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">integrate_pvals</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;p_values&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assays</span><span class="p">[</span><span class="n">i</span><span class="p">]]:</span>
+                <span class="n">integrate_pvals</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No p-values found. Skipping p-value integration.&quot;</span><span class="p">)</span>
+                
+    <span class="n">integrated_cci_scores</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">lr_dfs</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">lr_pairs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">get_lr_pairs</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">assay</span><span class="o">=</span><span class="n">assays</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Integration needs at least two samples&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lr_pairs</span><span class="p">)):</span>
+        <span class="n">lr</span> <span class="o">=</span> <span class="n">lr_pairs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">lr</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assays</span><span class="p">[</span><span class="n">j</span><span class="p">]][</span><span class="s1">&#39;cci_scores&#39;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">lr</span> <span class="ow">in</span> <span class="n">lr_dfs</span><span class="p">:</span>
+                    <span class="n">lr_dfs</span><span class="p">[</span><span class="n">lr</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">samples</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assays</span><span class="p">[</span><span class="n">j</span><span class="p">]][</span><span class="s1">&#39;cci_scores&#39;</span><span class="p">][</span><span class="n">lr</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">lr_dfs</span><span class="p">[</span><span class="n">lr</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">samples</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assays</span><span class="p">[</span><span class="n">j</span><span class="p">]][</span><span class="s1">&#39;cci_scores&#39;</span><span class="p">][</span><span class="n">lr</span><span class="p">]]</span>
+
+    <span class="k">with</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">lr_pairs</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Integrating LR CCI scores&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">pbar</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">lr</span><span class="p">,</span> <span class="n">dfs</span> <span class="ow">in</span> <span class="n">lr_dfs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dfs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">sum</span><span class="p">:</span>
+                    <span class="n">dfs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dfs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">tl</span><span class="o">.</span><span class="n">align_dataframes</span><span class="p">(</span><span class="n">dfs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dfs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="n">integrated_cci_scores</span><span class="p">[</span><span class="n">lr</span><span class="p">]</span> <span class="o">=</span> <span class="n">dfs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">dfs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">integrated_cci_scores</span><span class="p">[</span><span class="n">lr</span><span class="p">]</span> <span class="o">=</span> <span class="n">integrated_cci_scores</span><span class="p">[</span><span class="n">lr</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span>
+                    <span class="n">integrated_cci_scores</span><span class="p">[</span><span class="n">lr</span><span class="p">]</span> <span class="o">=</span> <span class="n">integrated_cci_scores</span><span class="p">[</span><span class="n">lr</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">integrated_cci_scores</span><span class="p">[</span><span class="n">lr</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">dfs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">dfs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="n">integrated_cci_scores</span><span class="p">[</span><span class="n">lr</span><span class="p">]</span> <span class="o">=</span> \
+                        <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">integrated_cci_scores</span><span class="p">[</span><span class="n">lr</span><span class="p">])</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                        
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">dfs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">sum</span><span class="p">:</span>
+                    <span class="n">integrated_cci_scores</span><span class="p">[</span><span class="n">lr</span><span class="p">]</span> <span class="o">=</span> <span class="n">dfs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">dfs</span><span class="p">)):</span>
+                        <span class="n">integrated_cci_scores</span><span class="p">[</span><span class="n">lr</span><span class="p">],</span> <span class="n">dfs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">tl</span><span class="o">.</span><span class="n">align_dataframes</span><span class="p">(</span>
+                            <span class="n">integrated_cci_scores</span><span class="p">[</span><span class="n">lr</span><span class="p">],</span> <span class="n">dfs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                        <span class="n">integrated_cci_scores</span><span class="p">[</span><span class="n">lr</span><span class="p">]</span> <span class="o">=</span> \
+                            <span class="n">integrated_cci_scores</span><span class="p">[</span><span class="n">lr</span><span class="p">]</span> <span class="o">+</span> <span class="n">dfs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">integrated_cci_scores</span><span class="p">[</span><span class="n">lr</span><span class="p">]</span> <span class="o">=</span> \
+                        <span class="n">integrated_cci_scores</span><span class="p">[</span><span class="n">lr</span><span class="p">]</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">dfs</span><span class="p">)</span>
+                    <span class="n">integrated_cci_scores</span><span class="p">[</span><span class="n">lr</span><span class="p">]</span> <span class="o">=</span> <span class="n">integrated_cci_scores</span><span class="p">[</span><span class="n">lr</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">integrated_cci_scores</span><span class="p">[</span><span class="n">lr</span><span class="p">]</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">multiply_non_zero_values</span><span class="p">(</span><span class="n">dfs</span><span class="p">,</span> 
+                                                                 <span class="n">strict</span><span class="o">=</span><span class="n">strict</span><span class="p">)</span>
+                    
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">integrated_cci_scores</span><span class="p">[</span><span class="n">lr</span><span class="p">]</span> <span class="o">=</span> <span class="n">dfs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">tqdm</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">pbar</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">integrate_pvals</span><span class="p">:</span>
+        <span class="n">integrated_p_values</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">lr_dfs</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="n">lr_pairs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)):</span>
+            <span class="n">lr_pairs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assays</span><span class="p">[</span><span class="n">j</span><span class="p">]][</span><span class="s1">&#39;p_values&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">lr_pairs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">lr_pairs</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lr_pairs</span><span class="p">)):</span>
+            <span class="n">lr</span> <span class="o">=</span> <span class="n">lr_pairs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">lr</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assays</span><span class="p">[</span><span class="n">j</span><span class="p">]][</span><span class="s1">&#39;p_values&#39;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">lr</span> <span class="ow">in</span> <span class="n">lr_dfs</span><span class="p">:</span>
+                        <span class="n">lr_dfs</span><span class="p">[</span><span class="n">lr</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">samples</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assays</span><span class="p">[</span><span class="n">j</span><span class="p">]][</span><span class="s1">&#39;p_values&#39;</span><span class="p">][</span><span class="n">lr</span><span class="p">])</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">lr_dfs</span><span class="p">[</span><span class="n">lr</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">samples</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assays</span><span class="p">[</span><span class="n">j</span><span class="p">]][</span><span class="s1">&#39;p_values&#39;</span><span class="p">][</span><span class="n">lr</span><span class="p">]]</span>
+
+        <span class="k">with</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">lr_dfs</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Integrating p values&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">pbar</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">lr</span><span class="p">,</span> <span class="n">dfs</span> <span class="ow">in</span> <span class="n">lr_dfs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">integrated_p_values</span><span class="p">[</span><span class="n">lr</span><span class="p">]</span> <span class="o">=</span> \
+                    <span class="n">_correct_pvals_matrix</span><span class="p">(</span><span class="n">dfs</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">p_val_method</span><span class="p">)</span>
+                <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                
+    <span class="k">if</span> <span class="n">metadata</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;platform&#39;</span><span class="p">:</span> <span class="s1">&#39;integrated&#39;</span><span class="p">}</span>
+        
+    <span class="n">integrated</span> <span class="o">=</span> <span class="n">CCIData</span><span class="p">(</span>
+        <span class="n">cci_scores</span><span class="o">=</span><span class="n">integrated_cci_scores</span><span class="p">,</span>
+        <span class="n">p_values</span><span class="o">=</span><span class="n">integrated_p_values</span><span class="p">,</span>
+        <span class="n">other_metadata</span><span class="o">=</span><span class="n">metadata</span>
+    <span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">integrated</span></div>
+
+
+
+<div class="viewcode-block" id="integrate_networks">
+<a class="viewcode-back" href="../../api/mmcci.it.integrate_networks.html#mmcci.it.integrate_networks">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">integrate_networks</span><span class="p">(</span>
+    <span class="n">samples</span><span class="p">,</span>
+    <span class="nb">sum</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">assay</span><span class="o">=</span><span class="s2">&quot;raw&quot;</span><span class="p">,</span>
+    <span class="n">network_key</span><span class="o">=</span><span class="s2">&quot;network&quot;</span><span class="p">,</span>
+    <span class="n">integrate_pvals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">p_val_method</span><span class="o">=</span><span class="s2">&quot;stouffer&quot;</span><span class="p">,</span>
+    <span class="n">p_val_key</span><span class="o">=</span><span class="s2">&quot;network_p_values&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CCIData</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Integrates a list of samples that are single networks into a single network.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        samples (list): A list of CCIData objects.</span>
+<span class="sd">        sum (bool) (optional): Whether to sum instead of multiply the matrices. Defaults to False.</span>
+<span class="sd">        strict (bool) (optional): If True, only interactions where more than 50% of the  values are non-zero will be multiplied. Defaults to False.</span>
+<span class="sd">        assay (str) (optional): The assay or assays to use for integrating samples.  Defaults to &quot;raw&quot;.</span>
+<span class="sd">        network_key (str) (optional): The key or keys to use for identifying the  network. Defaults to &quot;network&quot;.</span>
+<span class="sd">        integrate_pvals (bool) (optional): Whether to integrate p-values (if possible). Defaults to False.</span>
+<span class="sd">        p_val_method (str) (optional): The method to use for combining p-values. Options are &quot;stouffer&quot; and &quot;fisher&quot;. Defaults to &quot;stouffer&quot;.</span>
+<span class="sd">        p_val_key (str) (optional): The key to use for identifying p-values. Defaults to &quot;network_p_values&quot;.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        CCIData: The integrated sample.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Integration needs at least two samples.&quot;</span><span class="p">)</span>
+    
+    <span class="n">networks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">integrated_network</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">integrated_p_values</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">assays</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">network_keys</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">assay</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">assays</span> <span class="o">=</span> <span class="p">[</span><span class="n">assay</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">))]</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">assay</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Assay list must be the same length as the samples list.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">assays</span> <span class="o">=</span> <span class="n">assay</span>
+        
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">network_key</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">network_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">network_key</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">))]</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">network_key</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Network key list must be the same length as the samples list.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">network_keys</span> <span class="o">=</span> <span class="n">network_key</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assays</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Sample does not have the specified assay.&quot;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">integrate_pvals</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">p_val_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No p-value key provided.&quot;</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">p_val_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assays</span><span class="p">[</span><span class="n">i</span><span class="p">]]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Sample does not have the specified p-value key.&quot;</span><span class="p">)</span>
+            
+        <span class="n">networks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assays</span><span class="p">[</span><span class="n">i</span><span class="p">]][</span><span class="n">network_keys</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
+            
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">networks</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">sum</span><span class="p">:</span>
+            <span class="n">networks</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">networks</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">tl</span><span class="o">.</span><span class="n">align_dataframes</span><span class="p">(</span><span class="n">networks</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">networks</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">integrated_network</span> <span class="o">=</span> <span class="n">networks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">networks</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">integrated_network</span> <span class="o">=</span> <span class="n">integrated_network</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="n">integrated_network</span> <span class="o">=</span> <span class="n">integrated_network</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">integrated_network</span> <span class="o">=</span> <span class="p">(</span><span class="n">networks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">networks</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">integrated_network</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">integrated_network</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">networks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">sum</span><span class="p">:</span>
+            <span class="n">integrated_network</span> <span class="o">=</span> <span class="n">networks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">networks</span><span class="p">)):</span>
+                <span class="n">integrated_network</span><span class="p">,</span> <span class="n">networks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">tl</span><span class="o">.</span><span class="n">align_dataframes</span><span class="p">(</span>
+                    <span class="n">integrated_network</span><span class="p">,</span> <span class="n">networks</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">integrated_network</span> <span class="o">=</span> <span class="n">integrated_network</span> <span class="o">+</span> <span class="n">networks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">integrated_network</span> <span class="o">=</span> <span class="n">integrated_network</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">networks</span><span class="p">)</span>
+            <span class="n">integrated_network</span> <span class="o">=</span> <span class="n">integrated_network</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">integrated_network</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">multiply_non_zero_values</span><span class="p">(</span><span class="n">networks</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="n">strict</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">integrate_pvals</span><span class="p">:</span>
+        <span class="n">p_values</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)):</span>
+            <span class="n">p_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assays</span><span class="p">[</span><span class="n">i</span><span class="p">]][</span><span class="n">p_val_key</span><span class="p">])</span>
+        
+        <span class="n">integrated_p_values</span> <span class="o">=</span> <span class="n">_correct_pvals_matrix</span><span class="p">(</span><span class="n">p_values</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">p_val_method</span><span class="p">)</span>
+        
+    <span class="n">integrated</span> <span class="o">=</span> <span class="n">CCIData</span><span class="p">(</span>
+        <span class="n">network</span><span class="o">=</span><span class="n">integrated_network</span><span class="p">,</span>
+        <span class="n">network_p_values</span><span class="o">=</span><span class="n">integrated_p_values</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">integrated</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_correct_pvals_matrix</span><span class="p">(</span>
+    <span class="n">dfs</span><span class="p">,</span> 
+    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;stouffer&quot;</span>
+    <span class="p">):</span>
+    
+    <span class="n">result_df</span> <span class="o">=</span> <span class="n">dfs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dfs</span><span class="p">)):</span>
+        <span class="n">dfs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">result_df</span> <span class="o">=</span> <span class="n">tl</span><span class="o">.</span><span class="n">align_dataframes</span><span class="p">(</span>
+            <span class="n">dfs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">result_df</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">NaN</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dfs</span><span class="p">)):</span>
+        <span class="n">dfs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">result_df</span> <span class="o">=</span> <span class="n">tl</span><span class="o">.</span><span class="n">align_dataframes</span><span class="p">(</span>
+            <span class="n">dfs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">result_df</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">NaN</span><span class="p">)</span>
+
+    <span class="n">result_df</span> <span class="o">=</span> <span class="n">result_df</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">result_df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">dfs</span><span class="p">]</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="mf">0.00000000001</span> <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">(</span>
+                    <span class="mf">0.9999999999</span> <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">values</span><span class="p">]</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">values</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">x</span><span class="p">)]</span>
+            <span class="n">result_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">combine_pvalues</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">result_df</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Genomics and Machine Learning Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

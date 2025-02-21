@@ -1,0 +1,793 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mmcci.an &mdash; MMCCI 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+
+  
+    <link rel="canonical" href="/_modules/mmcci/an.html" />
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=292eb321"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MMCCI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">General</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started with MMCCI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../notebooks/brain_aging_example.html">MMCCI Multi-Platform Aging Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../notebooks/melanoma_example.html">MMCCI Melanoma CCI Integration and Analysis Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../notebooks/loading_CCI_results.html">Loading CCI results</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MMCCI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mmcci.an</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mmcci.an</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scanpy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">gseapy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gp</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">statistics</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">umap</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib.resources</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">anndata</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ad</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearSegmentedColormap</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">gseapy</span><span class="w"> </span><span class="kn">import</span> <span class="n">barplot</span><span class="p">,</span> <span class="n">dotplot</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.spatial.distance</span><span class="w"> </span><span class="kn">import</span> <span class="n">pdist</span><span class="p">,</span> <span class="n">squareform</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.cluster.hierarchy</span><span class="w"> </span><span class="kn">import</span> <span class="n">linkage</span><span class="p">,</span> <span class="n">dendrogram</span><span class="p">,</span> <span class="n">ClusterWarning</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.cluster</span><span class="w"> </span><span class="kn">import</span> <span class="n">hierarchy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.cluster</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgglomerativeClustering</span><span class="p">,</span> <span class="n">KMeans</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">silhouette_score</span><span class="p">,</span> <span class="n">davies_bouldin_score</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">preprocessing</span> <span class="k">as</span> <span class="n">pp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.decomposition</span><span class="w"> </span><span class="kn">import</span> <span class="n">PCA</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">simplefilter</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">sc</span><span class="p">,</span> <span class="n">pl</span><span class="p">,</span> <span class="n">tl</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.CCIData_class</span><span class="w"> </span><span class="kn">import</span> <span class="n">CCIData</span>
+
+<span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="ne">Warning</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="calculate_dissim">
+<a class="viewcode-back" href="../../api/mmcci.an.calculate_dissim.html#mmcci.an.calculate_dissim">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_dissim</span><span class="p">(</span>
+    <span class="n">sample1</span><span class="p">:</span> <span class="n">CCIData</span><span class="p">,</span>
+    <span class="n">sample2</span><span class="p">:</span> <span class="n">CCIData</span><span class="p">,</span>
+    <span class="n">assay</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;raw&quot;</span><span class="p">,</span>
+    <span class="n">key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cci_scores&quot;</span><span class="p">,</span>
+    <span class="n">lmbda</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates a dissimilarity score between two samples for each common LR pair.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        sample1, sample2 (CCIData): The two samples to compare.</span>
+<span class="sd">        assay (str) (optional): The assay to use for the comparison. Defaults to &#39;raw&#39;.</span>
+<span class="sd">        key (str) (optional): The key to use for the comparison. Defaults to  &#39;cci_scores&#39;.</span>
+<span class="sd">        lmbda (float) (optional): The weighting factor for the comparison. Defaults to 0.5.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: A dictionary where keys are common LR pairs and values are the dissimilarity scores.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">assay</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sample1</span><span class="o">.</span><span class="n">assays</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Assay </span><span class="si">{</span><span class="n">assay</span><span class="si">}</span><span class="s2"> not found in sample1.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">assay</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sample2</span><span class="o">.</span><span class="n">assays</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Assay </span><span class="si">{</span><span class="n">assay</span><span class="si">}</span><span class="s2"> not found in sample2.&quot;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sample1</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assay</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> not found in sample1.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sample2</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assay</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> not found in sample2.&quot;</span><span class="p">)</span>
+    
+    <span class="n">dissims</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="k">for</span> <span class="n">lr_pair</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">sample1</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assay</span><span class="p">][</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span>
+        <span class="nb">set</span><span class="p">(</span><span class="n">sample2</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assay</span><span class="p">][</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="p">):</span>
+        <span class="n">dissims</span><span class="p">[</span><span class="n">lr_pair</span><span class="p">]</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">dissimilarity_score</span><span class="p">(</span>
+            <span class="n">sample1</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assay</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="n">lr_pair</span><span class="p">],</span>
+            <span class="n">sample2</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assay</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="n">lr_pair</span><span class="p">],</span>
+            <span class="n">lmbda</span><span class="o">=</span><span class="n">lmbda</span>
+        <span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">dissims</span></div>
+
+
+
+<div class="viewcode-block" id="get_network_diff">
+<a class="viewcode-back" href="../../api/mmcci.an.get_network_diff.html#mmcci.an.get_network_diff">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_network_diff</span><span class="p">(</span>
+    <span class="n">network1</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">network2</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">perm_test</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">num_perms</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100000</span>
+    <span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the difference between two networks. If perm_test is True, also performs permutation testing to assess the significance of the differences.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        network1, network2 (pd.DataFrame): Two matrices to compare (as DataFrames).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: A dictionary containing the difference between the two networks and p-values if perm_test is True.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">dfs</span> <span class="o">=</span> <span class="n">tl</span><span class="o">.</span><span class="n">align_dataframes</span><span class="p">(</span><span class="n">network1</span><span class="p">,</span> <span class="n">network2</span><span class="p">)</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">dfs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">dfs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">p_vals</span> <span class="o">=</span> <span class="kc">None</span>
+    
+    <span class="k">if</span> <span class="n">perm_test</span><span class="p">:</span>
+        <span class="n">abs_diff</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>
+
+        <span class="n">result_matrix</span> <span class="o">=</span> <span class="n">abs_diff</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">permtr</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">apply_along_axis</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">,</span>
+                <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">arr</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">apply_along_axis</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="n">x</span><span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Permute and test for matrix1</span>
+        <span class="n">perm</span> <span class="o">=</span> <span class="p">[</span><span class="n">permtr</span><span class="p">(</span><span class="n">abs_diff</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_perms</span><span class="p">)]</span>
+        <span class="n">sums</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">result_matrix</span> <span class="o">&lt;</span> <span class="n">perm_result</span> <span class="k">for</span> <span class="n">perm_result</span> <span class="ow">in</span> <span class="n">perm</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Calculate p-values</span>
+        <span class="n">p_vals</span> <span class="o">=</span> <span class="n">sums</span> <span class="o">/</span> <span class="n">num_perms</span>
+
+        <span class="n">p_vals</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">p_vals</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">abs_diff</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">abs_diff</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;diff&quot;</span><span class="p">:</span> <span class="n">diff</span><span class="p">,</span> <span class="s2">&quot;p_vals&quot;</span><span class="p">:</span> <span class="n">p_vals</span><span class="p">}</span></div>
+
+        
+
+<div class="viewcode-block" id="cell_network_clustering">
+<a class="viewcode-back" href="../../api/mmcci.an.cell_network_clustering.html#mmcci.an.cell_network_clustering">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cell_network_clustering</span><span class="p">(</span>
+    <span class="n">sample</span><span class="p">:</span> <span class="n">CCIData</span><span class="p">,</span> 
+    <span class="n">assay</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;raw&quot;</span><span class="p">,</span>
+    <span class="n">n_clusters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> 
+    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;KMeans&quot;</span>
+    <span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Groups ligand-receptor (LR) pairs into clusters based on their interaction network similarity.</span>
+<span class="sd">    </span>
+<span class="sd">    This function:</span>
+<span class="sd">    1. Separates LR pairs into those with single vs multiple interactions</span>
+<span class="sd">    2. Calculates dissimilarity scores between all pairs of LR networks</span>
+<span class="sd">    3. Performs clustering using either KMeans or Hierarchical clustering</span>
+<span class="sd">    4. Determines optimal cluster number if not specified</span>
+<span class="sd">    5. Creates new assays in the sample for each cluster</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sample (CCIData): Sample containing LR interaction networks to cluster</span>
+<span class="sd">        assay (str): Name of assay containing interaction data to analyze</span>
+<span class="sd">        n_clusters (int): Number of desired clusters. If 0, determined automatically</span>
+<span class="sd">        method (str): Clustering method - either &quot;KMeans&quot; or &quot;Hierarchical&quot;</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        CCIData: Sample with new assays added for each cluster found</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If specified assay not found in sample</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">assay</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sample</span><span class="o">.</span><span class="n">assays</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Assay </span><span class="si">{</span><span class="n">assay</span><span class="si">}</span><span class="s2"> not found in sample.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Dictionary to store LR pairs with only one interaction</span>
+    <span class="n">single_interaction_pairs</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_non_zero_values</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if dataframe contains any non-zero values&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="n">df</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># Get all LR pairs with non-zero interactions</span>
+    <span class="n">multi_interaction_pairs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">sample</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assay</span><span class="p">][</span><span class="s1">&#39;cci_scores&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">has_non_zero_values</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="p">}</span>
+    
+    <span class="c1"># Separate out LR pairs with only a single interaction</span>
+    <span class="k">for</span> <span class="n">lr_pair</span><span class="p">,</span> <span class="n">interaction_matrix</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">multi_interaction_pairs</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+        <span class="c1"># Check if matrix has only one non-zero value (excluding diagonal)</span>
+        <span class="n">diagonal_zeros</span> <span class="o">=</span> <span class="p">(</span><span class="n">interaction_matrix</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> 
+        <span class="n">total_zeros</span> <span class="o">=</span> <span class="p">(</span><span class="n">interaction_matrix</span><span class="o">.</span><span class="n">values</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">matrix_size</span> <span class="o">=</span> <span class="n">interaction_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="n">diagonal_zeros</span> <span class="o">==</span> <span class="n">matrix_size</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">and</span> 
+            <span class="n">total_zeros</span> <span class="o">==</span> <span class="p">(</span><span class="n">matrix_size</span> <span class="o">*</span> <span class="n">matrix_size</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">single_interaction_pairs</span><span class="p">[</span><span class="n">lr_pair</span><span class="p">]</span> <span class="o">=</span> <span class="n">interaction_matrix</span>
+            <span class="k">del</span> <span class="n">multi_interaction_pairs</span><span class="p">[</span><span class="n">lr_pair</span><span class="p">]</span>
+
+    <span class="c1"># Process LR pairs with multiple interactions</span>
+    <span class="k">if</span> <span class="n">multi_interaction_pairs</span><span class="p">:</span>
+        <span class="n">multi_dissimilarity_matrix</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="n">index</span><span class="o">=</span><span class="n">multi_interaction_pairs</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> 
+            <span class="n">columns</span><span class="o">=</span><span class="n">multi_interaction_pairs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="p">)</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Computing dissimilarity scores for complex interaction networks...&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">multi_interaction_pairs</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Processing&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">pbar</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">pair1</span><span class="p">,</span> <span class="n">matrix1</span> <span class="ow">in</span> <span class="n">multi_interaction_pairs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">pair2</span><span class="p">,</span> <span class="n">matrix2</span> <span class="ow">in</span> <span class="n">multi_interaction_pairs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">dissim_score</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">dissimilarity_score</span><span class="p">(</span>
+                        <span class="n">matrix1</span><span class="p">,</span> <span class="n">matrix2</span><span class="p">,</span> <span class="n">lmbda</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">only_non_zero</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="p">)</span>
+                    <span class="n">multi_dissimilarity_matrix</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">pair1</span><span class="p">,</span> <span class="n">pair2</span><span class="p">]</span> <span class="o">=</span> <span class="n">dissim_score</span>
+                <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                
+        <span class="n">multi_interaction_clusters</span> <span class="o">=</span> <span class="n">_lr_cluster_helper</span><span class="p">(</span>
+            <span class="n">multi_dissimilarity_matrix</span><span class="p">,</span> <span class="n">multi_interaction_pairs</span><span class="p">,</span> <span class="n">n_clusters</span><span class="p">,</span> <span class="n">method</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Process LR pairs with single interactions </span>
+    <span class="k">if</span> <span class="n">single_interaction_pairs</span><span class="p">:</span>
+        <span class="c1"># Initialize an empty dataframe to store the results</span>
+        <span class="n">result_df_one</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="n">index</span><span class="o">=</span><span class="n">single_interaction_pairs</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">columns</span><span class="o">=</span><span class="n">single_interaction_pairs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="c1"># Iterate through the keys and compare the dataframes</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Computing Dissimilarity Scores for single interactions...&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">single_interaction_pairs</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Processing&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">pbar</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key1</span><span class="p">,</span> <span class="n">df1</span> <span class="ow">in</span> <span class="n">single_interaction_pairs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">key2</span><span class="p">,</span> <span class="n">df2</span> <span class="ow">in</span> <span class="n">single_interaction_pairs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">dissimilarity_score</span><span class="p">(</span>
+                        <span class="n">df1</span><span class="p">,</span> <span class="n">df2</span><span class="p">,</span> <span class="n">lmbda</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">only_non_zero</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="p">)</span>
+                    
+                    <span class="c1"># Store the result in the result_df</span>
+                    <span class="n">result_df_one</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">key1</span><span class="p">,</span> <span class="n">key2</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+                <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                
+        <span class="n">total</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">lr_pair</span> <span class="ow">in</span> <span class="n">single_interaction_pairs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">single_interaction_pairs</span><span class="p">[</span><span class="n">lr_pair</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">total</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">total</span> <span class="o">=</span> <span class="n">total</span> <span class="o">+</span> <span class="n">single_interaction_pairs</span><span class="p">[</span><span class="n">lr_pair</span><span class="p">]</span> <span class="o">/</span> \
+                    <span class="n">single_interaction_pairs</span><span class="p">[</span><span class="n">lr_pair</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">total</span> <span class="o">=</span> <span class="n">single_interaction_pairs</span><span class="p">[</span><span class="n">lr_pair</span><span class="p">]</span> <span class="o">/</span> \
+                        <span class="n">single_interaction_pairs</span><span class="p">[</span><span class="n">lr_pair</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                <span class="n">total</span> <span class="o">=</span> <span class="n">total</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">total</span> <span class="o">=</span> <span class="n">total</span> <span class="o">/</span> <span class="n">total</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="n">total</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        
+        <span class="n">n_clusters</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">total</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span>
+            <span class="o">==</span> <span class="mi">0</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">single_interaction_clusters</span> <span class="o">=</span> <span class="n">_lr_cluster_helper</span><span class="p">(</span>
+            <span class="n">result_df_one</span><span class="p">,</span> <span class="n">single_interaction_pairs</span><span class="p">,</span> <span class="n">n_clusters</span>
+        <span class="p">)</span>
+        <span class="n">single_interaction_clusters</span><span class="p">[</span><span class="s2">&quot;cluster&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">single_interaction_clusters</span><span class="p">[</span><span class="s2">&quot;cluster&quot;</span><span class="p">]</span>
+            <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="n">multi_interaction_clusters</span><span class="p">[</span><span class="s2">&quot;cluster&quot;</span><span class="p">])</span>
+            <span class="o">+</span> <span class="mi">1</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Combine cluster assignments</span>
+    <span class="n">final_cluster_assignments</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">multi_interaction_clusters</span><span class="p">,</span> <span class="n">single_interaction_clusters</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Create new assays for each cluster in the sample</span>
+    <span class="k">for</span> <span class="n">lr_pair</span> <span class="ow">in</span> <span class="n">final_cluster_assignments</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+        <span class="n">cluster_id</span> <span class="o">=</span> <span class="n">final_cluster_assignments</span><span class="p">[</span><span class="s2">&quot;cluster&quot;</span><span class="p">][</span><span class="n">lr_pair</span><span class="p">]</span>
+        <span class="n">cluster_assay</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;cluster_</span><span class="si">{</span><span class="n">cluster_id</span><span class="si">}</span><span class="s2">&quot;</span>
+        
+        <span class="c1"># Initialize cluster assay if needed</span>
+        <span class="k">if</span> <span class="n">cluster_assay</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sample</span><span class="o">.</span><span class="n">assays</span><span class="p">:</span>
+            <span class="n">sample</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">cluster_assay</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;cci_scores&#39;</span><span class="p">:</span> <span class="p">{},</span>
+                <span class="s1">&#39;p_values&#39;</span><span class="p">:</span> <span class="p">{}</span>
+            <span class="p">}</span>
+            
+        <span class="c1"># Add interaction matrices to cluster assay    </span>
+        <span class="n">sample</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">cluster_assay</span><span class="p">][</span><span class="s1">&#39;cci_scores&#39;</span><span class="p">][</span><span class="n">lr_pair</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">sample</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assay</span><span class="p">][</span><span class="s1">&#39;cci_scores&#39;</span><span class="p">][</span><span class="n">lr_pair</span><span class="p">]</span>
+        <span class="n">sample</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">cluster_assay</span><span class="p">][</span><span class="s1">&#39;p_values&#39;</span><span class="p">][</span><span class="n">lr_pair</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">sample</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assay</span><span class="p">][</span><span class="s1">&#39;p_values&#39;</span><span class="p">][</span><span class="n">lr_pair</span><span class="p">]</span>
+
+    <span class="c1"># Calculate overall interactions for each cluster</span>
+    <span class="k">for</span> <span class="n">assay_name</span> <span class="ow">in</span> <span class="n">sample</span><span class="o">.</span><span class="n">assays</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">assay_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;cluster_&#39;</span><span class="p">):</span>
+            <span class="n">sample</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">calc_overall</span><span class="p">(</span><span class="n">assay</span><span class="o">=</span><span class="n">assay_name</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">sample</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_lr_cluster_helper</span><span class="p">(</span><span class="n">result_df</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">n_clusters</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;KMeans&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Args:</span>
+<span class="sd">        result_df (pd.DataFrame): A DataFrame containing dissimilarity scores for LRs</span>
+<span class="sd">        sample (dict): A dictionary containing LR matrices.</span>
+<span class="sd">        n_clusters (int) (optional): The desired number of clusters. If 0, the optimal number is determined using silhouette analysis. Defaults to 0.</span>
+<span class="sd">        method (str) (optional): The clustering method to use. Defaults to &#39;KMeans&#39;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        pd.DataFrame: A DataFrame with the cluster assignments for each sample.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Compute distance matrix from disimilarity matrix</span>
+    <span class="n">result_df</span> <span class="o">=</span> <span class="n">result_df</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float64&quot;</span><span class="p">)</span>
+    <span class="n">result_df</span> <span class="o">=</span> <span class="n">result_df</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">distances</span> <span class="o">=</span> <span class="n">pdist</span><span class="p">(</span><span class="n">result_df</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s2">&quot;euclidean&quot;</span><span class="p">)</span>
+    <span class="n">dist_matrix</span> <span class="o">=</span> <span class="n">squareform</span><span class="p">(</span><span class="n">distances</span><span class="p">)</span>
+    <span class="n">dist_matrix</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+        <span class="n">pp</span><span class="o">.</span><span class="n">MinMaxScaler</span><span class="p">(</span><span class="n">feature_range</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span>
+            <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">dist_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">values</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Computing Principal Components of weighted graph ...&quot;</span><span class="p">)</span>
+    <span class="c1"># Perform PCA on weighted edges of interaction network</span>
+    <span class="n">flatten_dfs</span> <span class="o">=</span> <span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="k">for</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">sample</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+    <span class="n">flatten_dfs</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">flatten_dfs</span><span class="p">)</span>
+    <span class="n">flatten_dfs</span> <span class="o">=</span> <span class="n">flatten_dfs</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">scaler</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">StandardScaler</span><span class="p">()</span>
+    <span class="n">data_scaled</span> <span class="o">=</span> <span class="n">scaler</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">flatten_dfs</span><span class="p">)</span>
+    <span class="n">pca</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">data_pca</span> <span class="o">=</span> <span class="n">pca</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">data_scaled</span><span class="p">)</span>
+
+    <span class="c1"># Concatenate PC-1 and PC-2 with distance matrix</span>
+    <span class="n">pc_com_dist_matrix</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">dist_matrix</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data_pca</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Performing Clustering and Ranking within clusters...&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n_clusters</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># Number of clusters (adjust as needed)</span>
+        <span class="n">n_clusters</span> <span class="o">=</span> <span class="n">n_clusters</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;Hierarchial&quot;</span><span class="p">:</span>
+            <span class="c1"># Perform hierarchical clustering</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">AgglomerativeClustering</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="n">n_clusters</span><span class="p">,</span> <span class="n">linkage</span><span class="o">=</span><span class="s2">&quot;ward&quot;</span><span class="p">)</span>
+            <span class="n">clusters</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit_predict</span><span class="p">(</span><span class="n">pc_com_dist_matrix</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;KMeans&quot;</span><span class="p">:</span>
+            <span class="n">kmeans</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="n">n_clusters</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+            <span class="n">clusters</span> <span class="o">=</span> <span class="n">kmeans</span><span class="o">.</span><span class="n">fit_predict</span><span class="p">(</span><span class="n">pc_com_dist_matrix</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">n_clusters</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;Hierarchial&quot;</span><span class="p">:</span>
+            <span class="c1"># Evaluate silhouette score for different numbers of clusters</span>
+            <span class="n">silhouette_scores</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">n_clusters</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>
+                <span class="n">clusterer</span> <span class="o">=</span> <span class="n">AgglomerativeClustering</span><span class="p">(</span>
+                    <span class="n">n_clusters</span><span class="o">=</span><span class="n">n_clusters</span><span class="p">,</span> <span class="n">linkage</span><span class="o">=</span><span class="s2">&quot;ward&quot;</span>
+                <span class="p">)</span>
+                <span class="n">cluster_labels</span> <span class="o">=</span> <span class="n">clusterer</span><span class="o">.</span><span class="n">fit_predict</span><span class="p">(</span><span class="n">pc_com_dist_matrix</span><span class="p">)</span>
+                <span class="n">silhouette_avg</span> <span class="o">=</span> <span class="n">silhouette_score</span><span class="p">(</span><span class="n">pc_com_dist_matrix</span><span class="p">,</span> <span class="n">cluster_labels</span><span class="p">)</span>
+                <span class="n">silhouette_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">silhouette_avg</span><span class="p">)</span>
+            <span class="n">pl</span><span class="o">.</span><span class="n">silhouette_scores_plot</span><span class="p">(</span><span class="n">silhouette_scores</span><span class="p">)</span>
+            <span class="c1"># Perform hierarchical clustering</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">AgglomerativeClustering</span><span class="p">(</span>
+                <span class="c1"># Add 2 to account for starting with k=2</span>
+                <span class="n">n_clusters</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">silhouette_scores</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="n">linkage</span><span class="o">=</span><span class="s2">&quot;ward&quot;</span><span class="p">,</span>
+            <span class="p">)</span>  <span class="c1"># as indexing starts from 0</span>
+            <span class="n">clusters</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit_predict</span><span class="p">(</span><span class="n">pc_com_dist_matrix</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;KMeans&quot;</span><span class="p">:</span>
+            <span class="c1"># Find optimal numer of clusters Davies-Bouldin index</span>
+            <span class="n">db_scores</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>
+                <span class="n">kmeans</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="n">kmeans</span><span class="o">.</span><span class="n">fit_predict</span><span class="p">(</span><span class="n">pc_com_dist_matrix</span><span class="p">)</span>
+                <span class="n">db_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">davies_bouldin_score</span><span class="p">(</span><span class="n">pc_com_dist_matrix</span><span class="p">,</span> <span class="n">labels</span><span class="p">))</span>
+            <span class="c1"># Add 2 to account for starting with k=2</span>
+            <span class="n">optimal_clusters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">db_scores</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span>
+            <span class="n">kmeans</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="n">optimal_clusters</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+            <span class="n">clusters</span> <span class="o">=</span> <span class="n">kmeans</span><span class="o">.</span><span class="n">fit_predict</span><span class="p">(</span><span class="n">pc_com_dist_matrix</span><span class="p">)</span>
+
+    <span class="n">clusters</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">clusters</span><span class="p">)</span>
+    <span class="n">clusters</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="n">clusters</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;cluster&quot;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Rank LRs in each cluster based on increasing dissimilarity</span>
+    <span class="n">dist_matrix</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">dist_matrix</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;LRs&quot;</span><span class="p">,</span> <span class="s2">&quot;cluster&quot;</span><span class="p">]</span>
+    <span class="n">final_clusters</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">clusters</span><span class="p">[</span><span class="s2">&quot;cluster&quot;</span><span class="p">]))):</span>
+        <span class="n">clusters_index</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">clusters</span><span class="p">[</span><span class="n">clusters</span><span class="p">[</span><span class="s2">&quot;cluster&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">dist_matrix_cluster</span> <span class="o">=</span> <span class="n">dist_matrix</span><span class="p">[</span><span class="n">dist_matrix</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">clusters_index</span><span class="p">)]</span>
+        <span class="n">similarity_matrix</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">dist_matrix_cluster</span><span class="p">)</span>
+        <span class="n">linkage_matrix</span> <span class="o">=</span> <span class="n">hierarchy</span><span class="o">.</span><span class="n">linkage</span><span class="p">(</span><span class="n">similarity_matrix</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ward&quot;</span><span class="p">)</span>
+        <span class="n">sorted_indices</span> <span class="o">=</span> <span class="n">hierarchy</span><span class="o">.</span><span class="n">leaves_list</span><span class="p">(</span><span class="n">linkage_matrix</span><span class="p">)</span>
+        <span class="n">cluster_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">clusters_index</span><span class="p">)</span>
+        <span class="n">cluster_df</span> <span class="o">=</span> <span class="n">cluster_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">sorted_indices</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">cluster_df</span><span class="p">[</span><span class="s2">&quot;cluster&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="n">final_clusters</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">final_clusters</span><span class="p">,</span> <span class="n">cluster_df</span><span class="p">])</span>
+        
+    <span class="n">final_clusters</span> <span class="o">=</span> <span class="n">final_clusters</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span>
+    <span class="n">final_clusters</span> <span class="o">=</span> <span class="n">final_clusters</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;LRs&quot;</span><span class="p">})</span>
+    <span class="n">final_clusters</span> <span class="o">=</span> <span class="n">final_clusters</span><span class="p">[[</span><span class="s2">&quot;LRs&quot;</span><span class="p">,</span> <span class="s2">&quot;cluster&quot;</span><span class="p">]]</span>
+    <span class="n">final_clusters</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;LRs&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">final_clusters</span>
+
+    
+<div class="viewcode-block" id="lr_interaction_clustering">
+<a class="viewcode-back" href="../../api/mmcci.an.lr_interaction_clustering.html#mmcci.an.lr_interaction_clustering">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">lr_interaction_clustering</span><span class="p">(</span>
+    <span class="n">sample</span><span class="p">,</span>
+    <span class="n">resolution</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">cluster_palette</span><span class="o">=</span><span class="s2">&quot;Dark2_r&quot;</span><span class="p">,</span>
+    <span class="n">cell_type_palette</span><span class="o">=</span><span class="s2">&quot;tab20&quot;</span><span class="p">,</span>
+    <span class="n">cell_colors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">spot_size</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
+    <span class="n">spatial_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+    <span class="n">proportion_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">return_adata</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clustering of spatial LR interaction scores on AnnData objects processed through stLearn.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sample (AnnData): An AnnData object that has been run through stLearn.</span>
+<span class="sd">        resolution (float) (optional): The resolution to use for the clustering. Defaults to 0.5.</span>
+<span class="sd">        cluster_palette (str) (optional): Name of matplotlib colormap to use for clusters. Defaults to &#39;Dark2_r&#39;.</span>
+<span class="sd">        cell_type_palette (str) (optional): Name of matplotlib colormap to use for cell types. Defaults to &#39;tab20&#39;.</span>
+<span class="sd">        cell_colors (dict) (optional): Dictionary mapping cell types to colors. If not provided, colors will be generated from cell_type_palette. Defaults to None.</span>
+<span class="sd">        spot_size (float) (optional): The size of the spots in the spatial plot. Defaults to 1.5.</span>
+<span class="sd">        spatial_plot (bool) (optional): Whether to show the spatial plot. Defaults to True.</span>
+<span class="sd">        proportion_plot (bool) (optional): Whether to show the proportion plot. Defaults to True.</span>
+<span class="sd">        return_adata (bool) (optional): Whether to return the AnnData object with the clustering results. Defaults to False.</span>
+<span class="sd">        **kwargs: Additional keyword arguments to pass to the scanpy spatial plot function.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        AnnData: An AnnData object with the clustering results.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">sample</span><span class="o">.</span><span class="n">adata</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No AnnData object found in sample.&quot;</span><span class="p">)</span>
+    
+    <span class="n">LR</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;lr_scores&quot;</span><span class="p">])</span>
+    <span class="n">LR</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;lr_summary&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">LR</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span>
+
+    <span class="n">LR</span> <span class="o">=</span> <span class="n">scanpy</span><span class="o">.</span><span class="n">AnnData</span><span class="p">(</span><span class="n">LR</span><span class="p">)</span>
+    <span class="n">scanpy</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">normalize_total</span><span class="p">(</span><span class="n">LR</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">scanpy</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">LR</span><span class="p">)</span>
+    <span class="n">scanpy</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">pca</span><span class="p">(</span><span class="n">LR</span><span class="p">)</span>
+    <span class="n">scanpy</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">highly_variable_genes</span><span class="p">(</span><span class="n">LR</span><span class="p">,</span> <span class="n">flavor</span><span class="o">=</span><span class="s2">&quot;seurat&quot;</span><span class="p">,</span> <span class="n">n_top_genes</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
+    <span class="n">scanpy</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">LR</span><span class="p">,</span> <span class="n">use_rep</span><span class="o">=</span><span class="s2">&quot;X_pca&quot;</span><span class="p">,</span> <span class="n">n_neighbors</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+    <span class="n">scanpy</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">leiden</span><span class="p">(</span><span class="n">LR</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">)</span>
+    
+    <span class="n">scanpy</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">rank_genes_groups</span><span class="p">(</span><span class="n">LR</span><span class="p">,</span> <span class="n">groupby</span><span class="o">=</span><span class="s1">&#39;leiden&#39;</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;wilcoxon&#39;</span><span class="p">)</span>
+    <span class="c1"># scanpy.pl.rank_genes_groups(LR, n_genes=25, sharey=False)</span>
+    <span class="n">scanpy</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">dendrogram</span><span class="p">(</span><span class="n">LR</span><span class="p">,</span> <span class="n">groupby</span><span class="o">=</span><span class="s1">&#39;leiden&#39;</span><span class="p">)</span>
+    <span class="n">scanpy</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">rank_genes_groups_dotplot</span><span class="p">(</span><span class="n">LR</span><span class="p">,</span> <span class="n">n_genes</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">groupby</span><span class="o">=</span><span class="s1">&#39;leiden&#39;</span><span class="p">)</span>
+    
+    <span class="n">LR</span><span class="o">.</span><span class="n">obsm</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">adata</span><span class="o">.</span><span class="n">obsm</span>
+    <span class="n">LR</span><span class="o">.</span><span class="n">uns</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">adata</span><span class="o">.</span><span class="n">uns</span>
+    <span class="n">LR</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;leiden&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">LR</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;leiden&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+
+    <span class="n">scanpy</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">pca</span><span class="p">(</span><span class="n">LR</span><span class="p">)</span>
+    <span class="n">scanpy</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">highly_variable_genes</span><span class="p">(</span><span class="n">LR</span><span class="p">,</span> <span class="n">flavor</span><span class="o">=</span><span class="s2">&quot;seurat&quot;</span><span class="p">,</span> <span class="n">n_top_genes</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
+    <span class="n">scanpy</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">LR</span><span class="p">,</span> <span class="n">use_rep</span><span class="o">=</span><span class="s2">&quot;X_pca&quot;</span><span class="p">,</span> <span class="n">n_neighbors</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+    <span class="n">scanpy</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">umap</span><span class="p">(</span><span class="n">LR</span><span class="p">)</span>
+    
+    <span class="n">sample</span><span class="o">.</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;LR_Cluster&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">LR</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;leiden&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;str&quot;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">spatial_plot</span><span class="p">:</span>
+        <span class="n">scanpy</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spatial</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;LR_Cluster&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">spot_size</span><span class="p">,</span> 
+                     <span class="n">palette</span><span class="o">=</span><span class="n">cluster_palette</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="n">proportion_plot</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">&quot;cell_type&quot;</span> <span class="ow">in</span> <span class="n">sample</span><span class="o">.</span><span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">:</span>
+            <span class="c1"># make any value less than 0.1 == 0 in adata.uns[&#39;cell_type&#39;]</span>
+            <span class="n">sample</span><span class="o">.</span><span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;cell_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;cell_type&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">applymap</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mf">0.1</span> <span class="k">else</span> <span class="n">x</span><span class="p">)</span>
+            
+            <span class="n">merged_df</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;cell_type&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+                <span class="n">sample</span><span class="o">.</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;LR_Cluster&quot;</span><span class="p">],</span> <span class="n">left_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">right_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">proportions</span> <span class="o">=</span> <span class="n">merged_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;LR_Cluster&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="n">proportions</span> <span class="o">=</span> <span class="n">proportions</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">proportions</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">proportions</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;LR_Cluster&#39;</span><span class="p">)[</span><span class="s1">&#39;cell_type&#39;</span><span class="p">]</span> \
+                <span class="o">.</span><span class="n">value_counts</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">unstack</span><span class="p">()</span>
+
+        <span class="c1"># Generate colors from cell_type_palette if cell_colors not provided </span>
+        <span class="k">if</span> <span class="n">cell_colors</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">unique_types</span> <span class="o">=</span> <span class="n">proportions</span><span class="o">.</span><span class="n">columns</span>
+            <span class="n">default_colors</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">cell_type_palette</span><span class="p">)</span><span class="o">.</span><span class="n">colors</span>
+            <span class="n">cell_colors</span> <span class="o">=</span> <span class="p">{</span><span class="n">ctype</span><span class="p">:</span> <span class="n">default_colors</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">default_colors</span><span class="p">)]</span> 
+                        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ctype</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">unique_types</span><span class="p">)}</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">gridspec_kw</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;width_ratios&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">]})</span>
+
+        <span class="n">bars</span> <span class="o">=</span> <span class="n">proportions</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s2">&quot;bar&quot;</span><span class="p">,</span> <span class="n">stacked</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax1</span><span class="p">,</span> 
+                                <span class="n">color</span><span class="o">=</span><span class="n">proportions</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">cell_colors</span><span class="p">))</span>  
+        <span class="c1"># Use colormap based on cell types</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Proportion&quot;</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>  <span class="c1"># Remove default legend</span>
+
+        <span class="c1"># Create a legend without plot elements</span>
+        <span class="n">handles</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">bars</span><span class="o">.</span><span class="n">get_legend_handles_labels</span><span class="p">()</span>  <span class="c1"># Get handles and labels </span>
+        <span class="c1"># from the bar plot</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">return_adata</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">LR</span></div>
+
+
+
+<div class="viewcode-block" id="run_gsea">
+<a class="viewcode-back" href="../../api/mmcci.an.run_gsea.html#mmcci.an.run_gsea">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_gsea</span><span class="p">(</span>
+    <span class="n">sample</span><span class="p">:</span> <span class="n">CCIData</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">assay</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;raw&quot;</span><span class="p">,</span>
+    <span class="n">lrs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">organism</span><span class="o">=</span><span class="s2">&quot;human&quot;</span><span class="p">,</span>
+    <span class="n">gene_sets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;KEGG_2021_Human&quot;</span><span class="p">,</span> <span class="s2">&quot;MSigDB_Hallmark_2020&quot;</span><span class="p">],</span>
+    <span class="n">show_dotplot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">show_barplot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">top_term</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">),</span>
+    <span class="n">return_results</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Runs GSEA analysis on a sample.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sample (CCIData) (optional): The sample to run GSEA on. If not given, lrs are used. Defaults to None.</span>
+<span class="sd">        assay (str) (optional): The assay to use for the GSEA analysis. Defaults to &#39;raw&#39;.</span>
+<span class="sd">        lrs (list) (optional): A list of LR pairs to use for GSEA analysis instead of sample. Defaults to None.</span>
+<span class="sd">        organism (str) (optional): The organism to use. Defaults to &#39;human&#39;.</span>
+<span class="sd">        gene_sets (list) (optional): The gene sets to use for gseapy analysis. Defaults to [&#39;KEGG_2021_Human&#39;, &#39;MSigDB_Hallmark_2020&#39;].</span>
+<span class="sd">        show_dotplot (bool) (optional): Whether to show the dotplot. Defaults to False.</span>
+<span class="sd">        show_barplot (bool) (optional): Whether to show the barplot. Defaults to True.</span>
+<span class="sd">        top_term (int) (optional): The number of top terms to show. Defaults to 5.</span>
+<span class="sd">        figsize (tuple) (optional): The size of the figure. Defaults to (3,5).</span>
+<span class="sd">        return_results (bool) (optional): Whether to return the results DataFrame.  Defaults to True.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        pd.DataFrame or None: A DataFrame with the GSEA results if return_results=True, otherwise None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">gene_list</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">lrs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">assay</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sample</span><span class="o">.</span><span class="n">assays</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Assay </span><span class="si">{</span><span class="n">assay</span><span class="si">}</span><span class="s2"> not found in sample.&quot;</span><span class="p">)</span>
+        <span class="n">lrs</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assay</span><span class="p">][</span><span class="s2">&quot;cci_scores&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">lr</span> <span class="ow">in</span> <span class="n">lrs</span><span class="p">:</span>
+        <span class="n">gene1</span><span class="p">,</span> <span class="n">gene2</span> <span class="o">=</span> <span class="n">lr</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+        <span class="n">gene_list</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">gene1</span><span class="p">)</span>
+        <span class="n">gene_list</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">gene2</span><span class="p">)</span>
+
+    <span class="n">gene_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">gene_list</span><span class="p">)</span>
+
+    <span class="n">enr</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">enrichr</span><span class="p">(</span>
+        <span class="n">gene_list</span><span class="o">=</span><span class="n">gene_list</span><span class="p">,</span>
+        <span class="n">gene_sets</span><span class="o">=</span><span class="n">gene_sets</span><span class="p">,</span>
+        <span class="n">organism</span><span class="o">=</span><span class="n">organism</span><span class="p">,</span>
+        <span class="n">outdir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+        
+    <span class="k">if</span> <span class="n">show_dotplot</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">dotplot</span><span class="p">(</span>
+                <span class="n">enr</span><span class="o">.</span><span class="n">results</span><span class="p">,</span>
+                <span class="n">column</span><span class="o">=</span><span class="s2">&quot;Adjusted P-value&quot;</span><span class="p">,</span>
+                <span class="n">x</span><span class="o">=</span><span class="s2">&quot;Gene_set&quot;</span><span class="p">,</span>
+                <span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                <span class="n">top_term</span><span class="o">=</span><span class="n">top_term</span><span class="p">,</span>
+                <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">,</span>
+                <span class="n">xticklabels_rot</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span>
+                <span class="n">show_ring</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Could not plot dotplot.&quot;</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="n">show_barplot</span><span class="p">:</span>
+        <span class="n">colours</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">Dark2</span><span class="o">.</span><span class="n">colors</span><span class="p">)</span>
+        <span class="n">colour_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">gene_set</span><span class="p">:</span> <span class="n">colours</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">gene_set</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gene_sets</span><span class="p">)}</span>
+    
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">barplot</span><span class="p">(</span>
+                <span class="n">enr</span><span class="o">.</span><span class="n">results</span><span class="p">,</span>
+                <span class="n">column</span><span class="o">=</span><span class="s2">&quot;Adjusted P-value&quot;</span><span class="p">,</span>
+                <span class="n">group</span><span class="o">=</span><span class="s2">&quot;Gene_set&quot;</span><span class="p">,</span>
+                <span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                <span class="n">top_term</span><span class="o">=</span><span class="n">top_term</span><span class="p">,</span>
+                <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="n">colour_dict</span>
+            <span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Could not plot barplot.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">return_results</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">enr</span><span class="o">.</span><span class="n">results</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="pathway_subset">
+<a class="viewcode-back" href="../../api/mmcci.an.pathway_subset.html#mmcci.an.pathway_subset">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pathway_subset</span><span class="p">(</span>
+    <span class="n">sample</span><span class="p">:</span> <span class="n">CCIData</span><span class="p">,</span>
+    <span class="n">assay</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;raw&quot;</span><span class="p">,</span> 
+    <span class="n">gsea_results</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+    <span class="n">terms</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+    <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">assay_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CCIData</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Subsets a sample to only include interactions between genes in a set of pathways.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sample (CCIData): The sample to subset.</span>
+<span class="sd">        assay (str) (optional): The assay to use for the subset. Defaults to &#39;raw&#39;.</span>
+<span class="sd">        gsea_results (pd.DataFrame): The GSEA results to use to subset the sample.</span>
+<span class="sd">        terms (list): The terms to subset the sample with.</span>
+<span class="sd">        strict (bool): Whether to only include interactions between genes in the same pathway.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        CCIdata: The sample with an added assay containing the subsetted interactions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">genes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">grouped_cci_scores</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">grouped_p_values</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="k">if</span> <span class="n">assay_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># make assay name based on terms</span>
+        <span class="n">assay_name</span> <span class="o">=</span> <span class="s2">&quot;+&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">terms</span><span class="p">)</span>    
+        
+    <span class="k">if</span> <span class="n">assay</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sample</span><span class="o">.</span><span class="n">assays</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Assay </span><span class="si">{</span><span class="n">assay</span><span class="si">}</span><span class="s2"> not found in sample.&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">terms</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">term</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">gsea_results</span><span class="p">[</span><span class="s1">&#39;Term&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Term </span><span class="si">{</span><span class="n">term</span><span class="si">}</span><span class="s2"> not found in GSEA results.&quot;</span><span class="p">)</span>
+        <span class="n">filtered_df</span> <span class="o">=</span> <span class="n">gsea_results</span><span class="p">[</span><span class="n">gsea_results</span><span class="p">[</span><span class="s1">&#39;Term&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">term</span><span class="p">]</span>
+        <span class="n">gene_list</span> <span class="o">=</span> <span class="n">filtered_df</span><span class="p">[</span><span class="s1">&#39;Genes&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">gene_list</span><span class="p">:</span>
+            <span class="n">genes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">gene</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">sample</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assay</span><span class="p">][</span><span class="s1">&#39;cci_scores&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">lig</span><span class="p">,</span> <span class="n">rec</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">strict</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">lig</span> <span class="ow">in</span> <span class="n">genes</span> <span class="ow">and</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">genes</span><span class="p">:</span>
+                <span class="n">grouped_cci_scores</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assay</span><span class="p">][</span><span class="s1">&#39;cci_scores&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+                <span class="n">grouped_p_values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assay</span><span class="p">][</span><span class="s1">&#39;p_values&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">lig</span> <span class="ow">in</span> <span class="n">genes</span> <span class="ow">or</span> <span class="n">rec</span> <span class="ow">in</span> <span class="n">genes</span><span class="p">:</span>
+                <span class="n">grouped_cci_scores</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assay</span><span class="p">][</span><span class="s1">&#39;cci_scores&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+                <span class="n">grouped_p_values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assay</span><span class="p">][</span><span class="s1">&#39;p_values&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+                
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of interactions in </span><span class="si">{</span><span class="n">assay_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">grouped_cci_scores</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">sample</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assay_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">sample</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assay_name</span><span class="p">][</span><span class="s1">&#39;cci_scores&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">grouped_cci_scores</span>
+    <span class="n">sample</span><span class="o">.</span><span class="n">assays</span><span class="p">[</span><span class="n">assay_name</span><span class="p">][</span><span class="s1">&#39;p_values&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">grouped_p_values</span>
+    <span class="n">sample</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">calc_overall</span><span class="p">(</span><span class="n">assay_name</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">sample</span></div>
+
+
+
+<div class="viewcode-block" id="add_lr_module_score">
+<a class="viewcode-back" href="../../api/mmcci.an.add_lr_module_score.html#mmcci.an.add_lr_module_score">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_lr_module_score</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="n">lr_list</span><span class="p">,</span> <span class="n">key_name</span><span class="o">=</span><span class="s2">&quot;score&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds a module score to an AnnData object run through stLearn based on the interactions in a list of ligand-receptor pairs.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sample (AnnData): The AnnData object to add the score to. Must be processed through stLearn.</span>
+<span class="sd">        lr_list (list): The list of ligand-receptor pairs to use.</span>
+<span class="sd">        key_name (str): The key to use for the score.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        AnnData: The AnnData object with the module score added.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">lr_counts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;lr_sig_scores&#39;</span><span class="p">])</span>
+    <span class="n">lr_counts</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span>
+    <span class="n">lr_counts</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;lr_summary&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span>
+
+    <span class="n">adata</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">AnnData</span><span class="p">(</span><span class="n">lr_counts</span><span class="p">)</span>
+    <span class="n">scanpy</span><span class="o">.</span><span class="n">tl</span><span class="o">.</span><span class="n">score_genes</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">gene_list</span><span class="o">=</span><span class="n">lr_list</span><span class="p">)</span>
+    <span class="n">sample</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">key_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;score&#39;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">sample</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Genomics and Machine Learning Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
