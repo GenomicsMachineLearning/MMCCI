@@ -4,13 +4,13 @@ API
 CCIData
 ~~~~~~~
 
-.. .. module:: mmcci.CCIData_class
-.. .. currentmodule:: mmcci
+.. module:: mmcci.CCIData_class
+.. currentmodule:: mmcci
 
-.. .. autosummary::
-..     :toctree: api
+.. autosummary::
+    :toctree: api
 
-    .. CCIData
+    CCIData
 
 Integration
 ~~~~~~~~~~~
