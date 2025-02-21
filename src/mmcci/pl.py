@@ -4,6 +4,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import matplotlib.gridspec as gridspec
+
 from . import plot_helper, an
 from .CCIData_class import CCIData
 
