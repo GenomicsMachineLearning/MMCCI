@@ -36,7 +36,7 @@ exclude_patterns = [
     '*/_build', 
     'Thumbs.db', 
     '.DS_Store', 
-    '*/__init__.py', 
+    '**__init__.py', 
     '**.ipynb_checkpoints'
     ]
 
