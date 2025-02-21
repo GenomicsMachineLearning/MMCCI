@@ -1,6 +1,6 @@
 import numpy as np
 
-from mmcci import tl
+from . import tl
 
 
 def dissimilarity_score(
