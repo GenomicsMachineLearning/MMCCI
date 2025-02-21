@@ -10,7 +10,7 @@ CCIData
 .. autosummary::
     :toctree: api
 
-    CCIData
+    .. CCIData
 
 Integration
 ~~~~~~~~~~~
