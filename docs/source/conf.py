@@ -12,7 +12,7 @@ import sys
 sys.path.insert(0, os.path.abspath('../../src'))
 sys.path.insert(0, os.path.abspath('../../'))
 
-project = 'MMCCI'
+project = 'mmcci'
 copyright = '2025, Genomics and Machine Learning Lab'
 author = 'Levi Hockey'
 release = '1.0.1'
@@ -46,7 +46,7 @@ autodoc_member_order = "groupwise"
 autodoc_typehints = "signature"
 autodoc_docstring_signature = True
 html_theme = 'sphinx_rtd_theme'
-html_static_path = ['_static']
+# html_static_path = ['_static']
 html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "/")
 
 autoclass_content = 'both'
