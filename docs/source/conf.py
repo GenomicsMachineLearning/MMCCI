@@ -48,6 +48,7 @@ autodoc_docstring_signature = True
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "/")
+# html_show_sphinx = False
 
 autoclass_content = 'both'
 

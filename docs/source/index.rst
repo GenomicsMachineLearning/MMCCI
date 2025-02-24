@@ -6,8 +6,11 @@ MMCCI
 Multi-platform, Multi-sample Cell-Cell Interaction Integrative Analysis of Single Cell and Spatial Data
 ----------------------------------------------------------------------------------------------------------------
 
-**MMCCI** is a Python package for analyzing cell–cell interaction data from different CCI tools. 
+**MMCCI** is an open-source Python package for analyzing cell–cell interaction data from different CCI tools. 
 This documentation provides an overview, installation guidelines, API reference, and usage examples.
+
+Source code is available on `GitHub <https://github.com/GenomicsMachineLearning/MMCCI>`_.
+Issues can be reported on the `GitHub issue tracker <https://github.com/GenomicsMachineLearning/MMCCI/issues>`_.
 
 .. image:: https://raw.githubusercontent.com/GenomicsMachineLearning/MMCCI/refs/heads/main/docs/images/analyses_pipeline.png
     :alt: MMCCI title figure
@@ -22,7 +25,7 @@ MMCCI's key applications
 MMCCI allows users to integrate multiple CCI results together, both:
 
    1. Samples from a single platform (eg. Visium)
-   2. Samples from multiple platforms (eg. Visium, Xenium and CosMX)
+   2. Samples from multiple platforms (eg. Visium, Xenium and CosMx, and CODEX)
 
 MMCCI provides multiple useful analyses that can be run on the integrated networks or from a single sample:
 
@@ -62,5 +65,3 @@ MMCCI provides multiple useful analyses that can be run on the integrated networ
     :target: https://pepy.tech/project/mmcci
     :alt: Downloads
 
-
-.. _github: https://github.com/GenomicsMachineLearning/MMCCI
