@@ -54,13 +54,13 @@ pip install mmcci
 
 ### Documentation
 
-Documentation is available at the ![readthedocs](https://mmcci.readthedocs.io/en/latest/index.html)
+Documentation is available at the ![Read the Docs](https://mmcci.readthedocs.io/en/latest/)
 
 ## CCI Integration
 
 MMCCI allows users to integrate multiple CCI results together, both:
 1. Samples from a single platform (eg. Visium)
-2. Samples from multiple platforms (eg. Visium, Xenium and CosMX)
+2. Samples from multiple platforms (eg. Visium, Xenium, CosMx, CODEX)
 
 ![Integration and Analysis Method](docs/images/analyses_pipeline.png)
 
