@@ -2,7 +2,7 @@ API
 ===
 
 CCIData Class
-~~~~~~~
+~~~~~~~~~~~~~
 
 .. module:: mmcci.CCIData_class
 .. currentmodule:: mmcci
