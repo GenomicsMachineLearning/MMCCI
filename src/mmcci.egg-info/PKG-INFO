@@ -1,6 +1,6 @@
 Metadata-Version: 2.2
 Name: mmcci
-Version: 1.0.1
+Version: 1.0.2
 Summary: A Python package for processing multi-platform, multi-sample CCI data
 Home-page: https://github.com/GenomicsMachineLearning/MMCCI
 Author: Genomics and Machine Learning lab
@@ -43,6 +43,16 @@ Requires-Dist: anndata<=0.10.8
   </tr>
   <tr>
     <td>
+      <b>Documentation</b>
+    </td>
+    <td>
+      <a href="https://mmcci.readthedocs.io/en/latest/">
+      <img src="https://readthedocs.org/projects/mmcci/badge/?version=latest" alt="Documentation Status">
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td>
      <b>Paper</b>
     </td>
     <td>
@@ -61,12 +71,9 @@ Requires-Dist: anndata<=0.10.8
   </tr>
 </table>
         
-**MMCCI** is a fast and lightweight Python package for integrating and visualizing CCI networks within and between multiple platforms at the level of the individual LR pair. It works on **scRNA-seq** and **spatial transcriptomics** data samples that have been processed through the following CCI algorithms:
-1. stLearn
-2. CellChat
-3. CellPhoneDB
-4. NATMI
-5. Squidpy
+**MMCCI** is a fast and lightweight Python package for integrating and visualizing CCI networks. It works on **scRNA-seq** and **spatial transcriptomics** data samples that have been processed through CCI algorithms including [stLearn](https://stlearn.readthedocs.io/en/latest/), [CellChat](http://www.cellchat.org/), [CellPhoneDB](https://www.cellphonedb.org/), [NATMI](https://github.com/asrhou/NATMI), and [Squidpy](https://squidpy.readthedocs.io/en/stable/).
+
+![Integration and Analysis Method](docs/images/analyses_pipeline.png)
 
 ## Getting Started
 
@@ -78,22 +85,15 @@ MMCCI can be installed with `pip`
 pip install mmcci
 ```
 
-
 ### Documentation
 
-Documentation and Tutorials are available here and we are commited to maintaining the software and addressing issues raised by users.
-
-- There is a brain aging tutorial notebook [here](examples/brain_aging_example.ipynb)
-- There is a melanoma tutorial notebook [here](examples/melanoma_example.ipynb)
-- To understand how to load CCI results from different tools, look at this notebook [here](examples/loading_CCI_results.ipynb)
+Documentation is available at the [Read the Docs](https://mmcci.readthedocs.io/en/latest/)
 
 ## CCI Integration
 
 MMCCI allows users to integrate multiple CCI results together, both:
 1. Samples from a single platform (eg. Visium)
-2. Samples from multiple platforms (eg. Visium, Xenium and CosMX)
-
-![Integration and Analysis Method](docs/images/analyses_pipeline.png)
+2. Samples from multiple platforms (eg. Visium, Xenium, CosMx, CODEX)
 
 ## CCI Analysis
 

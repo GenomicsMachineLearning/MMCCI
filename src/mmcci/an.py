@@ -331,7 +331,6 @@ def _lr_cluster_helper(result_df, sample, n_clusters=0, method="KMeans"):
                 cluster_labels = clusterer.fit_predict(pc_com_dist_matrix)
                 silhouette_avg = silhouette_score(pc_com_dist_matrix, cluster_labels)
                 silhouette_scores.append(silhouette_avg)
-            pl.silhouette_scores_plot(silhouette_scores)
             # Perform hierarchical clustering
             model = AgglomerativeClustering(
                 # Add 2 to account for starting with k=2

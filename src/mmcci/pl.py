@@ -515,6 +515,8 @@ def dissim_hist(
     y_tick_size=12,
     figsize=(6, 5),
     show=True,
+    title=None,
+    title_size=14
 ):
     """Plots a histogram of dissimilarity scores.
 
@@ -525,6 +527,9 @@ def dissim_hist(
         x_tick_size (int): Font size for ticks. Defaults to 14.
         y_tick_size (int): Font size for ticks. Defaults to 12.
         figsize (tuple): Size of the figure. Defaults to (10, 8).
+        show (bool): Whether to show the plot or not. Defaults to True.
+        title (str): Title of the plot. Defaults to None.
+        title_size (int): Font size of the title. Defaults to 14.
 
     Returns:
         matplotlib.figure.Figure: The figure
@@ -538,6 +543,9 @@ def dissim_hist(
     plt.ylabel("Count", fontsize=y_label_size)
     plt.tick_params(axis='x', which='major', labelsize=x_tick_size)
     plt.tick_params(axis='y', which='major', labelsize=y_tick_size)
+
+    if title is not None:
+        plt.title(title, fontsize=title_size, pad=20)
 
     if show:
         plt.show()
@@ -556,6 +564,8 @@ def lr_top_dissimilarity(
     y_tick_size=12,
     figsize=(6, 5),
     show=True,
+    title=None,
+    title_size=14
 ):
     """Plots a bar plot of LR pairs with highest/lowest dissimilarity scores.
 
@@ -568,6 +578,9 @@ def lr_top_dissimilarity(
         x_tick_size (int): Font size for ticks. Defaults to 14.
         y_tick_size (int): Font size for ticks. Defaults to 12.
         figsize (tuple): Size of the figure. Defaults to (10, 8).
+        show (bool): Whether to show the plot or not. Defaults to True.
+        title (str): Title of the plot. Defaults to None.
+        title_size (int): Font size of the title. Defaults to 14.
 
     Returns:
         matplotlib.figure.Figure: The figure
@@ -587,42 +600,16 @@ def lr_top_dissimilarity(
     plt.ylabel("LR Pair", fontsize=y_label_size)
     plt.tick_params(axis='x', which='major', labelsize=x_tick_size)
     plt.tick_params(axis='y', which='major', labelsize=y_tick_size)
+    
+    if title is not None:
+        plt.title(title, fontsize=title_size, pad=20)
 
     if show:
         plt.show()
     else:
         plt.close(fig)
         return fig
-
-
-def silhouette_scores_plot(
-    silhouette_scores,
-    figsize=(10, 7),
-    show=True,
-):
-    """Plots a line plot of silhouette scores.
-
-    Args:
-        silhouette_scores (list): A list of silhouette scores.
-        figsize (tuple): Size of the figure. Defaults to (10, 7).
-
-    Returns:
-        matplotlib.figure.Figure: The figure
-    """
-
-    fig = plt.figure(figsize=figsize)
-    plt.style.use('fast')
-    plt.plot(range(2, 11), silhouette_scores, marker="o")
-    plt.title("Silhouette Score for Different Numbers of Clusters")
-    plt.xlabel("Number of Clusters")
-    plt.ylabel("Silhouette Score")
-
-    if show:
-        plt.show()
-    else:
-        plt.close(fig)
-        return fig
-
+    
 
 def lr_barplot(
     sample,
@@ -635,6 +622,7 @@ def lr_barplot(
     figsize=(6, 5),
     show=True,
     title=None,
+    title_size=14
 ):
     """Plots a bar plot of LR pairs and their proportions for a sample.
 
@@ -648,6 +636,7 @@ def lr_barplot(
         y_tick_size (int): Font size for tick labels. Defaults to 12.
         figsize (tuple): Size of the figure. Defaults to (10, 8).
         title (str) (optional): Title for the plot. Defaults to None.
+        title_size (int): Font size of the title. Defaults to 14.
 
     Returns:
         matplotlib.figure.Figure: The figure
@@ -672,7 +661,7 @@ def lr_barplot(
     plt.tick_params(axis='y', which='major', labelsize=y_tick_size)
 
     if title:
-        plt.title(title, pad=20, fontsize=14)
+        plt.title(title, pad=20, fontsize=title_size)
     
     plt.tight_layout()
 
@@ -698,6 +687,7 @@ def lrs_per_celltype(
     figsize=(6, 5),
     show=True,
     title=None,
+    title_size=14
 ):
     """Plots a bar plot of LR pairs and their proportions for a sender and receiver cell type pair along with p_values (optional).
 
@@ -715,6 +705,7 @@ def lrs_per_celltype(
         y_tick_size (int): Font size for tick labels. Defaults to 12.
         figsize (tuple): Size of the figure. Defaults to (10, 8).
         title (str) (optional): Title for the plot. Defaults to None.
+        title_size (int): Font size of the title. Defaults to 14.
 
     Returns:
         matplotlib.figure.Figure: The figure
@@ -757,7 +748,7 @@ def lrs_per_celltype(
     ax.tick_params(axis='y', which='major', labelsize=y_tick_size)
 
     if title:
-        plt.title(title, pad=20, fontsize=14)
+        plt.title(title, pad=20, fontsize=title_size)
         
     plt.tight_layout()
 
