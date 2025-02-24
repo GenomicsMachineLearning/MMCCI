@@ -54,7 +54,7 @@ pip install mmcci
 
 ### Documentation
 
-Documentation is available at the ![Read the Docs](https://mmcci.readthedocs.io/en/latest/)
+Documentation is available at the [Read the Docs](https://mmcci.readthedocs.io/en/latest/)
 
 ## CCI Integration
 
