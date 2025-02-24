@@ -16,6 +16,16 @@
   </tr>
   <tr>
     <td>
+      <b>Documentation</b>
+    </td>
+    <td>
+      <a href="https://mmcci.readthedocs.io/en/latest/">
+      <img src="https://readthedocs.org/projects/mmcci/badge/?version=latest" alt="Documentation Status">
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td>
      <b>Paper</b>
     </td>
     <td>
