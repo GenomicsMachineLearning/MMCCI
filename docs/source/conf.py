@@ -53,4 +53,4 @@ html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "/")
 autoclass_content = 'both'
 
 def setup(app: Sphinx) -> None:
-    app.add_css_file("css/custom.css")
+    app.add_css_file("custom.css")
