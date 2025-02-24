@@ -34,12 +34,9 @@
   </tr>
 </table>
         
-**MMCCI** is a fast and lightweight Python package for integrating and visualizing CCI networks within and between multiple platforms at the level of the individual LR pair. It works on **scRNA-seq** and **spatial transcriptomics** data samples that have been processed through the following CCI algorithms:
-1. stLearn
-2. CellChat
-3. CellPhoneDB
-4. NATMI
-5. Squidpy
+**MMCCI** is a fast and lightweight Python package for integrating and visualizing CCI networks. It works on **scRNA-seq** and **spatial transcriptomics** data samples that have been processed through CCI algorithms including [stLearn](https://stlearn.readthedocs.io/en/latest/), [CellChat](http://www.cellchat.org/), [CellPhoneDB](https://www.cellphonedb.org/), [NATMI](https://github.com/asrhou/NATMI), and [Squidpy](https://squidpy.readthedocs.io/en/stable/).
+
+![Integration and Analysis Method](docs/images/analyses_pipeline.png)
 
 ## Getting Started
 
@@ -51,7 +48,6 @@ MMCCI can be installed with `pip`
 pip install mmcci
 ```
 
-
 ### Documentation
 
 Documentation is available at the [Read the Docs](https://mmcci.readthedocs.io/en/latest/)
@@ -61,8 +57,6 @@ Documentation is available at the [Read the Docs](https://mmcci.readthedocs.io/e
 MMCCI allows users to integrate multiple CCI results together, both:
 1. Samples from a single platform (eg. Visium)
 2. Samples from multiple platforms (eg. Visium, Xenium, CosMx, CODEX)
-
-![Integration and Analysis Method](docs/images/analyses_pipeline.png)
 
 ## CCI Analysis
 
