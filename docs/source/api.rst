@@ -1,7 +1,7 @@
 API
 ===
 
-CCIData
+CCIData Class
 ~~~~~~~
 
 .. module:: mmcci.CCIData_class
@@ -68,7 +68,6 @@ Plotting
     pl.chord_plot
     pl.dissim_hist
     pl.lr_top_dissimilarity
-    pl.silhouette_scores_plot
     pl.lr_barplot
     pl.lrs_per_celltype
 
