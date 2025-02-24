@@ -3,4 +3,4 @@ sphinx-rtd-theme
 nbsphinx
 sphinx-autoapi
 myst-nb
-mmcci==1.0.1
+mmcci==1.0.2
