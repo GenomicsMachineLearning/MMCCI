@@ -10,6 +10,7 @@ import subprocess
 import umap
 import importlib.resources
 import anndata as ad
+import os
 
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
@@ -497,6 +498,8 @@ def run_gsea(
     show_barplot=True,
     top_term=5,
     figsize=(3,5),
+    use_background=True,
+    background_list=None,
     return_results=True
 ):
     """Runs GSEA analysis on a sample.
@@ -530,12 +533,23 @@ def run_gsea(
         gene_list.add(gene2)
 
     gene_list = list(gene_list)
+    
+    background = None
+    
+    if use_background:
+        if background_list is not None:
+            background = background_list
+        else:
+            path = os.path.dirname(os.path.realpath(__file__))
+            background = pd.read_csv(f"{path}/data/connectomeDB2020_lit.txt", sep="\t", header=None)
+            background = list(set(background[0].tolist() + background[1].tolist()))
 
     enr = gp.enrichr(
         gene_list=gene_list,
         gene_sets=gene_sets,
         organism=organism,
         outdir=None,
+        background=background
     )
         
     if show_dotplot:

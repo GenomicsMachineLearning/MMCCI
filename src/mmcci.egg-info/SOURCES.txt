@@ -17,3 +17,5 @@ src/mmcci.egg-info/SOURCES.txt
 src/mmcci.egg-info/dependency_links.txt
 src/mmcci.egg-info/requires.txt
 src/mmcci.egg-info/top_level.txt
+src/mmcci/data/__init__.py
+src/mmcci/data/connectomeDB2020_lit.txt
