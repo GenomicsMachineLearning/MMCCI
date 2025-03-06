@@ -514,6 +514,8 @@ def run_gsea(
         show_barplot (bool) (optional): Whether to show the barplot. Defaults to True.
         top_term (int) (optional): The number of top terms to show. Defaults to 5.
         figsize (tuple) (optional): The size of the figure. Defaults to (3,5).
+        use_background (bool) (optional): Whether to use a background list. Defaults to True.
+        background_list (list) (optional): A list of genes to use as background. If none given, then ConnectomeDB2020_lit genes are used. Defaults to None.
         return_results (bool) (optional): Whether to return the results DataFrame.  Defaults to True.
 
     Returns:
