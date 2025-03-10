@@ -81,9 +81,8 @@ def network_plot(
     plt.sca(ax)  # Set the current axis to the main plot area
 
     if remove_unconnected:
-        network = network.loc[(network != 0).any(axis=1), (network != 0).any(axis=0)]
-        network = network.loc[network.index.isin(
-            network.columns), network.columns.isin(network.index)]
+        cell_types = (network != 0).any(axis=0) + (network != 0).any(axis=1)
+        network = network.loc[cell_types, cell_types]
 
     if normalise:
         if network.min().min() >= 0:
