@@ -1,6 +1,6 @@
 Metadata-Version: 2.2
 Name: mmcci
-Version: 1.0.5
+Version: 1.0.6
 Summary: A Python package for processing multi-platform, multi-sample CCI data
 Home-page: https://github.com/GenomicsMachineLearning/MMCCI
 Author: Genomics and Machine Learning lab

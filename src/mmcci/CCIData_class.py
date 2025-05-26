@@ -182,6 +182,8 @@ class CCIData:
         cci_data = CCIData(
             assays=deepcopy(self.assays),
             other_metadata=deepcopy(self.metadata),
+            n_spots=self.n_spots,
+            adata=deepcopy(self.adata)
         )
         
         return cci_data
