@@ -7,6 +7,8 @@ from copy import deepcopy
 import json
 from tqdm import tqdm
 
+from . import tl
+
 
 class CCIData:
     """
@@ -110,7 +112,7 @@ class CCIData:
         Returns:
             Number of spots for the sample
         """
-        return self.n_spots.get(sample_id)
+        return self.metadata['n_spots'].get(sample_id)
     
     
     def get_sample_cci_scores(self, sample_id: str) -> Optional[pd.DataFrame]:
@@ -182,7 +184,6 @@ class CCIData:
         cci_data = CCIData(
             assays=deepcopy(self.assays),
             other_metadata=deepcopy(self.metadata),
-            n_spots=self.n_spots,
             adata=deepcopy(self.adata)
         )
         
@@ -424,16 +425,18 @@ class CCIData:
         
         total = None
         for lr_pair in sample.keys():
-            if sample[lr_pair].sum().sum() > 0:
+            df_sum = sample[lr_pair].sum().sum()
+            if df_sum > 0:
                 if total is not None:
+                    total, sample[lr_pair] = tl.align_dataframes(total, sample[lr_pair])
                     if normalize:
-                        total = total + sample[lr_pair] / sample[lr_pair].sum().sum()
+                        total = total + sample[lr_pair] / df_sum
                     else:
                         total = total + sample[lr_pair]
                     total = total.fillna(0)
                 else:
                     if normalize:
-                        total = sample[lr_pair] / sample[lr_pair].sum().sum()
+                        total = sample[lr_pair] / df_sum
                     else:
                         total = sample[lr_pair]
                     total = total.fillna(0)

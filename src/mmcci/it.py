@@ -20,7 +20,7 @@ def get_lr_pairs(
     Args:
         samples (list): A list of CCIData objects.
         assay (str) (optional): The assay or assays to use for identifying LR pairs. Defaults to "raw".
-        method (str) (optional): The method to use for identifying LR pairs. Options are "all", ">=50%", ">50%", and "any". Defaults to ">=50%".
+        method (str) (optional): The method to use for identifying LR pairs. Options are "intersection", ">=50%", ">50%", and "union". Defaults to ">=50%".
 
     Returns:
         list: A list of LR pairs that are present in a majority of samples
@@ -43,7 +43,7 @@ def get_lr_pairs(
                 lr_pairs_counts[lr_pair] = lr_pairs_counts.setdefault(lr_pair, 0) + 1
 
     for lr_pair, count in lr_pairs_counts.items():
-        if method == "all":
+        if method == "intersection":
             if count == len(samples):
                 lr_pairs.append(lr_pair)
         elif method == ">=50%":
@@ -52,10 +52,10 @@ def get_lr_pairs(
         elif method == ">50%":
             if count > len(samples) / 2:
                 lr_pairs.append(lr_pair)
-        elif method == "any":
+        elif method == "union":
             lr_pairs.append(lr_pair)
         else:
-            raise ValueError("Method must be 'all', '>=50%', '>50%', or 'any'.")
+            raise ValueError("Method must be 'intersection', '>=50%', '>50%', or 'union'.")
 
     return lr_pairs
 
@@ -139,7 +139,7 @@ def lr_integration(
     
     Args:
         samples (list): A list of CCIData objects.
-        method (str) (optional): The method to use for identifying LR pairs. Options are "all", ">=50%", ">50%", and "any". Defaults to ">=50%".
+        method (str) (optional): The method to use for identifying LR pairs. Options are "intersection", ">=50%", ">50%", and "union". Defaults to ">=50%".
         sum (bool) (optional): Whether to sum instead of multiply the matrices. Defaults to False.
         strict (bool) (optional): If True, only interactions where more than 50% of the values are non-zero will be multiplied. Defaults to False.
         assay (str) (optional): The assay or assays to use for integrating samples. Defaults to "raw".
@@ -222,14 +222,11 @@ def lr_integration(
                 integrated_cci_scores[lr] = dfs[0]
             tqdm.update(pbar, 1)
 
+    integrated_p_values = None
+    
     if integrate_pvals:
         integrated_p_values = {}
         lr_dfs = {}
-        
-        lr_pairs = set()
-        for i in range(len(samples)):
-            lr_pairs.update(samples[i].assays[assays[j]]['p_values'].keys())
-        lr_pairs = list(lr_pairs)
 
         for i in range(len(lr_pairs)):
             lr = lr_pairs[i]

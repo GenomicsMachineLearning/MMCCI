@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.abspath('../../'))
 project = 'mmcci'
 copyright = '2025, Genomics and Machine Learning Lab'
 author = 'Levi Hockey'
-release = '1.0.6'
+release = '1.0.7'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

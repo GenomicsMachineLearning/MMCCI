@@ -1,6 +1,6 @@
-Metadata-Version: 2.2
+Metadata-Version: 2.4
 Name: mmcci
-Version: 1.0.6
+Version: 1.0.7
 Summary: A Python package for processing multi-platform, multi-sample CCI data
 Home-page: https://github.com/GenomicsMachineLearning/MMCCI
 Author: Genomics and Machine Learning lab
@@ -24,6 +24,7 @@ Requires-Dist: gseapy<1.1.7,>=1.1.1
 Requires-Dist: scanpy>=1.9.0
 Requires-Dist: seaborn>=0.11.2
 Requires-Dist: anndata<=0.10.8
+Dynamic: license-file
 
 # MMCCI: Multi-platform, Multi-sample Cell-Cell Interaction Integrative Analysis of Single Cell and Spatial Data
 
