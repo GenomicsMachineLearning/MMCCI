@@ -67,12 +67,13 @@ Documentation is available at the [Read the Docs](https://mmcci.readthedocs.io/e
 MMCCI allows users to integrate multiple CCI results together, both:
 1. Samples from a single platform (eg. Visium)
 2. Samples from multiple platforms (eg. Visium, Xenium, CosMx, CODEX)
+3. Samples run from multiple CCI tools (eg. CellChat, CellPhoneDb)
 
 ## CCI Analysis
 
 MMCCI provides multiple useful analyses that can be run on the integrated networks or from a single sample:
 1. Network comparison between groups with permutation testing
-2. CLustering of LR pairs with similar networks
+2. Clustering of LR pairs with similar networks
 3. Clustering of spots/cells with similar interaction scores
 4. Sender-receiver LR querying
 5. GSEA pathway analysis
