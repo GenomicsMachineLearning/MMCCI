@@ -133,7 +133,8 @@ def lr_integration(
     assay="raw",
     integrate_pvals=True,
     p_val_method="stouffer",
-    metadata=None
+    metadata=None,
+    weights=None,
     ) -> CCIData:
     """Integrates a list of samples into a single sample per lr pair.
     
@@ -146,14 +147,18 @@ def lr_integration(
         integrate_pvals (bool) (optional): Whether to integrate p-values (if possible). Defaults to True.
         p_val_method (str) (optional): The method to use for combining p-values. Options are "stouffer" and "fisher". Defaults to "stouffer".
         metadata (dict) (optional): Additional metadata to include in the integrated sample. Defaults to None.
+        weights (list) (optional): A list of weights to apply to each sample during integration. Defaults to None.
         
     Returns:
         CCIData: The integrated sample.
     """
-    
+
     if len(samples) == 0:
         raise ValueError("No samples provided.")
-    
+
+    if weights is not None and len(weights) != len(samples):
+        raise ValueError("Weights list must be the same length as the samples list.")
+
     assays = []
     
     if type(assay) == str:
@@ -186,9 +191,9 @@ def lr_integration(
         for j in range(len(samples)):
             if lr in samples[j].assays[assays[j]]['cci_scores']:
                 if lr in lr_dfs:
-                    lr_dfs[lr].append(samples[j].assays[assays[j]]['cci_scores'][lr])
+                    lr_dfs[lr].append(samples[j].assays[assays[j]]['cci_scores'][lr] * (weights[j] if weights is not None else 1))
                 else:
-                    lr_dfs[lr] = [samples[j].assays[assays[j]]['cci_scores'][lr]]
+                    lr_dfs[lr] = [samples[j].assays[assays[j]]['cci_scores'][lr] * (weights[j] if weights is not None else 1)]
 
     with tqdm(total=len(lr_pairs), desc="Integrating LR CCI scores") as pbar:
         for lr, dfs in lr_dfs.items():
